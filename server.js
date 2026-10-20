@@ -4,7 +4,11 @@ const PORT = process.env.PORT || 10000;
 
 app.use(express.json());
 
-const htmlContent = `<!DOCTYPE html>
+app.get('/', (req, res) => {
+    res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+    res.setHeader('Pragma', 'no-cache');
+    res.setHeader('Expires', '0');
+    res.send(`<!DOCTYPE html>
 <html lang="tr">
 <head>
     <meta charset="UTF-8">
@@ -294,7 +298,7 @@ const htmlContent = `<!DOCTYPE html>
                             <i class="fa-solid fa-users-viewfinder"></i><span>Kime Hangi Dosya Verildi (Arşiv)</span>
                         </button>
                         <button onclick="switchTab('tab-mudur')" id="nav-tab-mudur" class="tab-btn px-3 py-2 rounded-lg text-red-200 hover:bg-red-800/60 hover:text-white whitespace-nowrap flex items-center space-x-2 transition">
-                            <i class="fa-solid fa-user-tie"></i><span>Müdür Bey Talimatları</span>
+                            <i class="fa-solid fa-user-tie"></i><span>Müdür Talimatları</span>
                         </button>
                         <button onclick="switchTab('tab-sikayet')" id="nav-tab-sikayet" class="tab-btn px-3 py-2 rounded-lg text-red-200 hover:bg-red-800/60 hover:text-white whitespace-nowrap flex items-center space-x-2 transition">
                             <i class="fa-solid fa-comment-dots"></i><span>Vatandaş Şikayetleri</span>
@@ -344,7 +348,7 @@ const htmlContent = `<!DOCTYPE html>
                             <thead class="bg-slate-100 text-slate-700 uppercase font-semibold border-b border-slate-200 text-[11px]">
                                 <tr>
                                     <th class="p-3">Ref No</th>
-                                    <th class="p-3">İnceleme Gerekçesi / Konu</th>
+                                    <th class="p-3">Dosya Konusu / Açıklama</th>
                                     <th class="p-3">Ekleyen Personel</th>
                                     <th class="p-3">Atanan Personel</th>
                                     <th class="p-3">Durum</th>
@@ -373,22 +377,19 @@ const htmlContent = `<!DOCTYPE html>
                     <div class="p-4 border-b border-slate-200 bg-slate-50 flex items-center justify-between">
                         <h3 class="font-bold text-sm text-slate-800 flex items-center space-x-2">
                             <i class="fa-solid fa-user-tie text-red-700"></i>
-                            <span>Müdür Bey Yazılı Talimatları</span>
+                            <span>Müdürlük Talimatları (Tamamlananlar Dahil)</span>
                         </h3>
-                        <button id="addMudurBtn" onclick="openMudurModal()" class="hidden px-3.5 py-2 bg-red-700 hover:bg-red-800 text-white font-bold text-xs rounded-xl shadow transition">
-                            <i class="fa-solid fa-plus mr-1"></i> Yeni Müdür Talimatı Gir
-                        </button>
                     </div>
                     <div class="overflow-x-auto">
                         <table class="w-full text-left text-xs text-slate-600">
                             <thead class="bg-slate-100 text-slate-700 uppercase font-semibold border-b border-slate-200 text-[11px]">
                                 <tr>
                                     <th class="p-3">Ref No</th>
-                                    <th class="p-3">Talimat Metni</th>
-                                    <th class="p-3">Veren Makam</th>
+                                    <th class="p-3">Talimat Konusu</th>
+                                    <th class="p-3">Ekleyen Personel</th>
                                     <th class="p-3">Görevli Personel</th>
                                     <th class="p-3">Durum</th>
-                                    <th class="p-3 text-right">İşlem / Açıklama</th>
+                                    <th class="p-3 text-right">İşlem</th>
                                 </tr>
                             </thead>
                             <tbody id="table-mudur" class="divide-y divide-slate-200 bg-white"></tbody>
@@ -660,28 +661,19 @@ const htmlContent = `<!DOCTYPE html>
         <div class="bg-white rounded-2xl shadow-2xl max-w-lg w-full border border-slate-200 overflow-hidden">
             <div class="bg-red-700 text-white px-5 py-4 flex items-center justify-between">
                 <h3 class="font-bold text-sm flex items-center space-x-2">
-                    <i class="fa-solid fa-file-circle-plus"></i><span id="newFileModalTitle">Yeni Dosya Oluştur</span>
+                    <i class="fa-solid fa-file-circle-plus"></i><span>Yeni Dosya Oluştur</span>
                 </h3>
                 <button onclick="closeModal('newFileModal')" class="text-white/80 hover:text-white"><i class="fa-solid fa-xmark text-lg"></i></button>
             </div>
             <form onsubmit="handleNewFileSubmit(event)" class="p-5 space-y-4">
                 <div>
                     <label class="block text-xs font-bold text-slate-700 mb-1">Dosya Kategorisi / Modül</label>
-                    <select id="formCategory" onchange="onCategoryChange(this.value)" class="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs focus:ring-2 focus:ring-red-600 outline-none">
+                    <select id="formCategory" class="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs focus:ring-2 focus:ring-red-600 outline-none">
                         <option value="inceleme">İnceleme Dosyası</option>
+                        <option value="mudur">Müdür Talimatı</option>
                         <option value="sikayet">Vatandaş Şikayeti</option>
                         <option value="hastane">Hastane Sevk Dilekçesi</option>
                         <option value="toplanti">Toplantı Dosyası</option>
-                    </select>
-                </div>
-
-                <div id="incelemeReasonContainer">
-                    <label class="block text-xs font-bold text-slate-700 mb-1">İnceleme Gerekçesi (Neden Verildi?)</label>
-                    <select id="formIncelemeReason" class="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs focus:ring-2 focus:ring-red-600 outline-none">
-                        <option value="Hane ziyareti güncel değil">Hane ziyareti güncel değil</option>
-                        <option value="Müdür inceleme talep etmekte">Müdür inceleme talep etmekte</option>
-                        <option value="CİMER başvurusu">CİMER başvurusu</option>
-                        <option value="Yeni dosya inceleme">Yeni dosya inceleme</option>
                     </select>
                 </div>
 
@@ -706,35 +698,6 @@ const htmlContent = `<!DOCTYPE html>
                 <div class="pt-3 border-t border-slate-200 flex justify-end space-x-2">
                     <button type="button" onclick="closeModal('newFileModal')" class="px-4 py-2 bg-slate-200 text-slate-700 text-xs font-semibold rounded-xl">İptal</button>
                     <button type="submit" class="px-5 py-2 bg-red-700 hover:bg-red-800 text-white text-xs font-bold rounded-xl shadow">Kaydet ve Personele Gönder</button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <div id="mudurModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
-        <div class="bg-white rounded-2xl shadow-2xl max-w-lg w-full border border-slate-200 overflow-hidden">
-            <div class="bg-red-700 text-white px-5 py-4 flex items-center justify-between">
-                <h3 class="font-bold text-sm flex items-center space-x-2">
-                    <i class="fa-solid fa-user-tie"></i><span>Müdür Bey Yazılı Talimatı Gir</span>
-                </h3>
-                <button onclick="closeModal('mudurModal')" class="text-white/80 hover:text-white"><i class="fa-solid fa-xmark text-lg"></i></button>
-            </div>
-            <form onsubmit="handleMudurSubmit(event)" class="p-5 space-y-4">
-                <div>
-                    <label class="block text-xs font-bold text-slate-700 mb-1">Referans Numarası / Evrak No</label>
-                    <input type="text" id="mudurRefNo" onblur="autoFormatRef(this)" required placeholder="Örn: MUDUR-01" class="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs uppercase font-bold text-red-700 focus:ring-2 focus:ring-red-600 outline-none">
-                </div>
-                <div>
-                    <label class="block text-xs font-bold text-slate-700 mb-1">Talimat Detayı / Yazılı Emir</label>
-                    <textarea id="mudurDescription" rows="3" required placeholder="Müdür Bey talimat metnini buraya yazınız..." class="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs focus:ring-2 focus:ring-red-600 outline-none"></textarea>
-                </div>
-                <div>
-                    <label class="block text-xs font-bold text-slate-700 mb-1">Görevlendirilecek Personel</label>
-                    <select id="mudurAssignee" class="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs focus:ring-2 focus:ring-red-600 outline-none" required></select>
-                </div>
-                <div class="pt-3 border-t border-slate-200 flex justify-end space-x-2">
-                    <button type="button" onclick="closeModal('mudurModal')" class="px-4 py-2 bg-slate-200 text-slate-700 text-xs font-semibold rounded-xl">İptal</button>
-                    <button type="submit" class="px-5 py-2 bg-red-700 hover:bg-red-800 text-white text-xs font-bold rounded-xl shadow">Talimatı Yayınla</button>
                 </div>
             </form>
         </div>
@@ -774,15 +737,15 @@ const htmlContent = `<!DOCTYPE html>
         <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full border border-slate-200 overflow-hidden">
             <div class="bg-emerald-600 text-white px-5 py-4 flex items-center justify-between">
                 <h3 class="font-bold text-sm flex items-center space-x-2">
-                    <i class="fa-solid fa-circle-check"></i><span id="completeModalTitle">Dosya İşlemini Tamamla & Onayla</span>
+                    <i class="fa-solid fa-circle-check"></i><span>Dosya İşlemini Tamamla & Onayla</span>
                 </h3>
                 <button onclick="closeModal('completeModal')" class="text-white/80 hover:text-white"><i class="fa-solid fa-xmark text-lg"></i></button>
             </div>
             <form onsubmit="handleCompleteSubmit(event)" class="p-5 space-y-4">
                 <input type="hidden" id="completeFileId">
                 <div>
-                    <label class="block text-xs font-bold text-slate-700 mb-1" id="completeNoteLabel">İnceleme / Sonuç Notu</label>
-                    <textarea id="completeNote" rows="3" required placeholder="İnceleme sonucunu / açıklamanızı yazınız..." class="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs focus:ring-2 focus:ring-emerald-600 outline-none"></textarea>
+                    <label class="block text-xs font-bold text-slate-700 mb-1">İnceleme / Sonuç Notu</label>
+                    <textarea id="completeNote" rows="3" required placeholder="İnceleme sonucunu yazınız..." class="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs focus:ring-2 focus:ring-emerald-600 outline-none"></textarea>
                 </div>
                 <div class="pt-3 border-t border-slate-200 flex justify-end space-x-2">
                     <button type="button" onclick="closeModal('completeModal')" class="px-4 py-2 bg-slate-200 text-slate-700 text-xs font-semibold rounded-xl">İptal</button>
@@ -793,28 +756,23 @@ const htmlContent = `<!DOCTYPE html>
     </div>
 
     <script>
-        const defaultUsers = [
+        let USERS = JSON.parse(localStorage.getItem('sydv_users')) || [
             { id: 1, name: "Süper Admin", role: "Süper Admin", isSuperAdmin: true, pass: "123456" },
             { id: 2, name: "Ayşe Kaya", role: "Sosyal Yardım Personeli", isSuperAdmin: false, pass: "123456" },
             { id: 3, name: "Mehmet Demir", role: "İnceleme Görevlisi", isSuperAdmin: false, pass: "123456" },
             { id: 4, name: "Fatma Şahin", role: "Vakıf Görevlisi", isSuperAdmin: false, pass: "123456" }
         ];
 
-        let USERS = JSON.parse(localStorage.getItem('sydv_users')) || defaultUsers;
-
         let PERMISSIONS = JSON.parse(localStorage.getItem('sydv_perms')) || {
-            2: { add_inceleme: true, add_sikayet: true, add_hastane: true, add_toplanti: false, can_transfer: true },
-            3: { add_inceleme: true, add_sikayet: false, add_hastane: false, add_toplanti: false, can_transfer: true },
-            4: { add_inceleme: false, add_sikayet: true, add_hastane: false, add_toplanti: true, can_transfer: false }
+            2: { add_inceleme: true, add_mudur: false, add_sikayet: true, add_hastane: true, add_toplanti: false, can_transfer: true },
+            3: { add_inceleme: true, add_mudur: true, add_sikayet: false, add_hastane: false, add_toplanti: false, can_transfer: true },
+            4: { add_inceleme: false, add_mudur: false, add_sikayet: true, add_hastane: false, add_toplanti: true, can_transfer: false }
         };
 
         const initialFiles = [
-            { id: "2026-101", category: "inceleme", incelemeReason: "Hane ziyareti güncel değil", description: "Hane incelemesi talebi değerlendirmesi.", assignedTo: 2, createdBy: 1, createdAt: "05.06.2026 10:15", deliveredConfirmed: false, status: "İşlemde" },
+            { id: "2026-101", category: "inceleme", description: "Hane incelemesi talebi değerlendirmesi.", assignedTo: 2, createdBy: 1, createdAt: "05.06.2026 10:15", deliveredConfirmed: false, status: "İncelemede" },
+            { id: "BAĞBAŞI-50", category: "mudur", description: "Engelli vatandaş için medikal cihaz temini talimatı.", assignedTo: 3, createdBy: 1, createdAt: "05.06.2026 11:30", deliveredConfirmed: false, status: "İşlemde" },
             { id: "2026-103", category: "sikayet", description: "Zeynep Arslan nakit yardım şikayet başvurusu.", assignedTo: 2, createdBy: 2, createdAt: "05.06.2026 14:00", deliveredConfirmed: true, status: "Tamamlandı" }
-        ];
-
-        let initialMudurFiles = [
-            { id: "MUDUR-01", description: "Engelli vatandaş için medikal cihaz temini talimatı.", assignedTo: 3, createdBy: 1, createdAt: "05.06.2026 11:30", deliveredConfirmed: false, status: "İşlemde" }
         ];
 
         let initialAnnouncements = [
@@ -823,23 +781,10 @@ const htmlContent = `<!DOCTYPE html>
 
         let currentUser = null;
         let files = JSON.parse(localStorage.getItem('sydv_files')) || initialFiles;
-        let mudurFiles = JSON.parse(localStorage.getItem('sydv_mudur_files')) || initialMudurFiles;
         let announcements = JSON.parse(localStorage.getItem('sydv_announcements')) || initialAnnouncements;
         let rejectionLogs = JSON.parse(localStorage.getItem('sydv_rejection_logs')) || [];
         let activityLogs = JSON.parse(localStorage.getItem('sydv_activity_logs')) || [];
         let activeTab = 'tab-inceleme';
-
-        function initUserDropdown() {
-            const select = document.getElementById('userSelect');
-            if (!select) return;
-            select.innerHTML = '<option value="">Lütfen Kullanıcı Seçiniz...</option>';
-            USERS.forEach(function(u) {
-                const opt = document.createElement('option');
-                opt.value = u.id;
-                opt.textContent = '[ID: ' + u.id + '] ' + u.name + ' (' + u.role + ')';
-                select.appendChild(opt);
-            });
-        }
 
         window.onload = function() {
             USERS.forEach(u => {
@@ -854,7 +799,6 @@ const htmlContent = `<!DOCTYPE html>
             localStorage.setItem('sydv_users', JSON.stringify(USERS));
             localStorage.setItem('sydv_perms', JSON.stringify(PERMISSIONS));
             localStorage.setItem('sydv_files', JSON.stringify(files));
-            localStorage.setItem('sydv_mudur_files', JSON.stringify(mudurFiles));
             localStorage.setItem('sydv_announcements', JSON.stringify(announcements));
             localStorage.setItem('sydv_rejection_logs', JSON.stringify(rejectionLogs));
             localStorage.setItem('sydv_activity_logs', JSON.stringify(activityLogs));
@@ -897,6 +841,14 @@ const htmlContent = `<!DOCTYPE html>
             if (currentUser.isSuperAdmin) {
                 renderActivityLogs();
             }
+        }
+
+        function initUserDropdown() {
+            const select = document.getElementById('userSelect');
+            select.innerHTML = '<option value="">Lütfen Kullanıcı Seçiniz...</option>';
+            USERS.forEach(u => {
+                select.innerHTML += \`<option value="\${u.id}">[ID: \${u.id}] \${u.name} (\${u.role})</option>\`;
+            });
         }
 
         function handleLogin(e) {
@@ -954,7 +906,7 @@ const htmlContent = `<!DOCTYPE html>
             document.getElementById('loginScreen').classList.add('hidden');
             document.getElementById('mainApp').classList.remove('hidden');
 
-            document.getElementById('currentUserName').innerText = '[ID: ' + currentUser.id + '] ' + currentUser.name;
+            document.getElementById('currentUserName').innerText = \`[ID: \${currentUser.id}] \${currentUser.name}\`;
             document.getElementById('currentUserRole').innerText = currentUser.role;
 
             const adminTabBtn = document.getElementById('nav-tab-admin');
@@ -964,10 +916,8 @@ const htmlContent = `<!DOCTYPE html>
             updateAddButtonVisibility();
 
             if (!currentUser.isSuperAdmin) {
-                const unconfirmedFiles = files.filter(f => f.assignedTo === currentUser.id && !f.deliveredConfirmed && f.status !== 'Tamamlandı');
-                const unconfirmedMudur = mudurFiles.filter(m => m.assignedTo === currentUser.id && !m.deliveredConfirmed && m.status !== 'Tamamlandı');
-                const allUnconfirmed = [...unconfirmedFiles, ...unconfirmedMudur];
-                if (allUnconfirmed.length > 0) showDeliveryModal(allUnconfirmed);
+                const unconfirmed = files.filter(f => f.assignedTo === currentUser.id && !f.deliveredConfirmed && f.status !== 'Tamamlandı');
+                if (unconfirmed.length > 0) showDeliveryModal(unconfirmed);
             }
 
             logActivity("Sisteme Giriş", "Portala başarıyla giriş yapıldı.");
@@ -980,20 +930,22 @@ const htmlContent = `<!DOCTYPE html>
             renderAdminAllFiles();
             renderActivityLogs();
             switchTab(activeTab);
-            showToast('Hoş geldiniz, ' + currentUser.name, 'info');
+            showToast(\`Hoş geldiniz, \${currentUser.name}\`, 'info');
         }
 
         function showLatestAnnouncementPopup() {
             if (announcements.length === 0) return;
             const latest = announcements[0];
             const content = document.getElementById('announcementPopupContent');
-            content.innerHTML = '<div class="bg-amber-50 p-4 rounded-xl border border-amber-200 space-y-2">' +
-                '<div class="flex items-center justify-between">' +
-                '<span class="font-bold text-red-700 text-sm">' + latest.title + '</span>' +
-                '<span class="text-[10px] text-slate-400">' + latest.date + '</span>' +
-                '</div>' +
-                '<p class="text-slate-800 leading-relaxed text-xs whitespace-pre-line">' + latest.body + '</p>' +
-                '</div>';
+            content.innerHTML = \`
+                <div class="bg-amber-50 p-4 rounded-xl border border-amber-200 space-y-2">
+                    <div class="flex items-center justify-between">
+                        <span class="font-bold text-red-700 text-sm">\${latest.title}</span>
+                        <span class="text-[10px] text-slate-400">\${latest.date}</span>
+                    </div>
+                    <p class="text-slate-800 leading-relaxed text-xs whitespace-pre-line">\${latest.body}</p>
+                </div>
+            \`;
             document.getElementById('announcementPopupModal').classList.remove('hidden');
         }
 
@@ -1002,16 +954,18 @@ const htmlContent = `<!DOCTYPE html>
             container.innerHTML = '';
 
             if (announcements.length === 0) {
-                container.innerHTML = '<p class="text-xs text-slate-400 text-center py-6">Sistemde kayıtlı duyuru bulunmamaktadır.</p>';
+                container.innerHTML = \`<p class="text-xs text-slate-400 text-center py-6">Sistemde kayıtlı duyuru bulunmamaktadır.</p>\`;
             } else {
                 announcements.forEach(a => {
-                    container.innerHTML += '<div class="p-4 bg-slate-50 border rounded-xl space-y-2 shadow-sm">' +
-                        '<div class="flex items-center justify-between border-b pb-1.5">' +
-                        '<span class="font-bold text-red-700 text-xs">' + a.title + '</span>' +
-                        '<span class="text-[10px] text-slate-400">' + a.date + '</span>' +
-                        '</div>' +
-                        '<p class="text-slate-700 text-xs whitespace-pre-line">' + a.body + '</p>' +
-                        '</div>';
+                    container.innerHTML += \`
+                        <div class="p-4 bg-slate-50 border rounded-xl space-y-2 shadow-sm">
+                            <div class="flex items-center justify-between border-b pb-1.5">
+                                <span class="font-bold text-red-700 text-xs">\${a.title}</span>
+                                <span class="text-[10px] text-slate-400">\${a.date}</span>
+                            </div>
+                            <p class="text-slate-700 text-xs whitespace-pre-line">\${a.body}</p>
+                        </div>
+                    \`;
                 });
             }
             document.getElementById('announcementsListModal').classList.remove('hidden');
@@ -1032,15 +986,12 @@ const htmlContent = `<!DOCTYPE html>
 
         function checkStaffActiveTasks() {
             if (!currentUser || currentUser.isSuperAdmin) return;
-            const activeTasks = files.filter(f => f.assignedTo === currentUser.id && f.status !== 'Tamamlandı').length;
-            const activeMudur = mudurFiles.filter(m => m.assignedTo === currentUser.id && m.status !== 'Tamamlandı').length;
-            const totalActive = activeTasks + activeMudur;
-
+            const activeTasks = files.filter(f => f.assignedTo === currentUser.id && f.status !== 'Tamamlandı');
             const alertBox = document.getElementById('staffActiveTaskAlert');
             const alertText = document.getElementById('staffActiveTaskText');
 
-            if (totalActive > 0) {
-                alertText.innerHTML = 'Dikkat! Üzerinizde sonuçlandırılmamış <strong>' + totalActive + ' adet aktif görev/talimat</strong> bulunmaktadır.';
+            if (activeTasks.length > 0) {
+                alertText.innerHTML = \`Dikkat! Üzerinizde sonuçlandırılmamış <strong>\${activeTasks.length} adet aktif görev</strong> bulunmaktadır.\`;
                 alertBox.classList.remove('hidden');
             } else {
                 alertBox.classList.add('hidden');
@@ -1083,20 +1034,21 @@ const htmlContent = `<!DOCTYPE html>
             showToast("Şifreniz başarıyla güncellendi.", "success");
         }
 
-        function showDeliveryModal(unconfirmedList) {
+        function showDeliveryModal(unconfirmedFiles) {
             document.getElementById('deliveryStaffName').innerText = currentUser.name;
             const tbody = document.getElementById('unconfirmedFilesTable');
             tbody.innerHTML = '';
 
-            unconfirmedList.forEach(item => {
-                const creator = USERS.find(u => u.id === item.createdBy)?.name || "Müdürlük / Süper Admin";
-                const isMudur = item.isMudur || item.id.includes('MUDUR');
-                tbody.innerHTML += '<tr class="hover:bg-slate-50">' +
-                    '<td class="p-3 font-bold text-red-700">' + item.id + '</td>' +
-                    '<td class="p-3 font-semibold text-slate-800">' + item.description + '</td>' +
-                    '<td class="p-3 text-slate-600">' + (isMudur ? 'MÜDÜR TALİMATI' : item.category.toUpperCase()) + '</td>' +
-                    '<td class="p-3 text-slate-600 font-medium">' + creator + '</td>' +
-                    '</tr>';
+            unconfirmedFiles.forEach(f => {
+                const creator = USERS.find(u => u.id === f.createdBy)?.name || "Sistem / Admin";
+                tbody.innerHTML += \`
+                    <tr class="hover:bg-slate-50">
+                        <td class="p-3 font-bold text-red-700">\${f.id}</td>
+                        <td class="p-3 font-semibold text-slate-800">\${f.description}</td>
+                        <td class="p-3 text-slate-600">\${f.category.toUpperCase()}</td>
+                        <td class="p-3 text-slate-600 font-medium">\${creator}</td>
+                    </tr>
+                \`;
             });
 
             document.getElementById('rejectionSection').classList.add('hidden');
@@ -1109,17 +1061,13 @@ const htmlContent = `<!DOCTYPE html>
             files.forEach(f => {
                 if (f.assignedTo === currentUser.id && !f.deliveredConfirmed) {
                     f.deliveredConfirmed = true;
-                }
-            });
-            mudurFiles.forEach(m => {
-                if (m.assignedTo === currentUser.id && !m.deliveredConfirmed) {
-                    m.deliveredConfirmed = true;
+                    logActivity("Dosya Teslim Onayı", \`Ref: \${f.id} nolu dosya teslim alındı onaylandı.\`);
                 }
             });
             saveState();
             renderAllTables();
             document.getElementById('deliveryModal').classList.add('hidden');
-            showToast("Tarafınıza atanan tüm görevler teslim alındı onaylandı.", "success");
+            showToast("Atanan tüm dosyaları teslim aldığınız onaylandı.", "success");
         }
 
         function toggleRejectionView() {
@@ -1145,18 +1093,16 @@ const htmlContent = `<!DOCTYPE html>
                 return;
             }
 
-            const unconfirmedFiles = files.filter(f => f.assignedTo === currentUser.id && !f.deliveredConfirmed);
-            const unconfirmedMudur = mudurFiles.filter(m => m.assignedTo === currentUser.id && !m.deliveredConfirmed);
-
-            [...unconfirmedFiles, ...unconfirmedMudur].forEach(item => {
+            const unconfirmed = files.filter(f => f.assignedTo === currentUser.id && !f.deliveredConfirmed);
+            unconfirmed.forEach(f => {
                 rejectionLogs.unshift({
                     date: new Date().toLocaleString('tr-TR'),
                     staffName: currentUser.name,
-                    fileId: item.id,
-                    subject: item.description,
+                    fileId: f.id,
+                    subject: f.description,
                     reason: reason
                 });
-                logActivity("Görev/Dosya Reddi", 'Ref: ' + item.id + ' nolu dosya/talimat reddedildi. Gerekçe: ' + reason);
+                logActivity("Dosya Reddi", \`Ref: \${f.id} nolu dosya reddedildi. Gerekçe: \${reason}\`);
             });
 
             saveState();
@@ -1168,7 +1114,10 @@ const htmlContent = `<!DOCTYPE html>
         function checkAdminRedNotifications() {
             if (currentUser && currentUser.isSuperAdmin && rejectionLogs.length > 0) {
                 const latest = rejectionLogs[0];
-                document.getElementById('adminRedBannerText').innerHTML = '<strong>' + latest.staffName + '</strong>, <span class="underline">' + latest.fileId + '</span> referanslı görevi/dosyayı teslim almayı reddetti. <br><strong>Gerekçe:</strong> "' + latest.reason + '" (' + latest.date + ')';
+                document.getElementById('adminRedBannerText').innerHTML = \`
+                    <strong>\${latest.staffName}</strong>, <span class="underline">\${latest.fileId}</span> referanslı dosyayı teslim almayı reddetti. <br>
+                    <strong>Gerekçe:</strong> "\${latest.reason}" (\${latest.date})
+                \`;
                 document.getElementById('adminRedBanner').classList.remove('hidden');
             } else {
                 document.getElementById('adminRedBanner').classList.add('hidden');
@@ -1188,29 +1137,27 @@ const htmlContent = `<!DOCTYPE html>
 
         function updateAddButtonVisibility() {
             const addBtn = document.getElementById('addFileBtn');
-            const addMudurBtn = document.getElementById('addMudurBtn');
             if (!currentUser) return;
 
             if (currentUser.isSuperAdmin) {
-                if (addBtn) addBtn.style.display = 'flex';
-                if (addMudurBtn) addMudurBtn.style.display = 'flex';
+                addBtn.style.display = 'flex';
                 return;
             }
 
             const userPerms = PERMISSIONS[currentUser.id] || {};
             let canAdd = false;
             if (activeTab === 'tab-inceleme' && userPerms.add_inceleme) canAdd = true;
+            if (activeTab === 'tab-mudur' && userPerms.add_mudur) canAdd = true;
             if (activeTab === 'tab-sikayet' && userPerms.add_sikayet) canAdd = true;
             if (activeTab === 'tab-hastane' && userPerms.add_hastane) canAdd = true;
             if (activeTab === 'tab-toplanti' && userPerms.add_toplanti) canAdd = true;
 
-            if (addBtn) addBtn.style.display = canAdd ? 'flex' : 'none';
-            if (addMudurBtn) addMudurBtn.style.display = (currentUser.id === 1 || currentUser.role.includes('Müdür') || currentUser.isSuperAdmin) ? 'flex' : 'none';
+            addBtn.style.display = canAdd ? 'flex' : 'none';
         }
 
         function renderAllTables() {
             renderTable('inceleme', 'table-inceleme');
-            renderMudurTable();
+            renderTable('mudur', 'table-mudur', true);
             renderTable('sikayet', 'table-sikayet');
             renderTable('hastane', 'table-hastane');
             renderTable('toplanti', 'table-toplanti');
@@ -1242,7 +1189,7 @@ const htmlContent = `<!DOCTYPE html>
             document.getElementById('announcementTitle').value = '';
             document.getElementById('announcementBody').value = '';
             renderAdminAnnouncements();
-            logActivity("Duyuru Yayınlama", 'Yeni duyuru yayınlandı: ' + title);
+            logActivity("Duyuru Yayınlama", \`Yeni duyuru yayınlandı: \${title}\`);
             showToast("Duyuru başarıyla yayınlandı.", "success");
         }
 
@@ -1252,19 +1199,21 @@ const htmlContent = `<!DOCTYPE html>
             tbody.innerHTML = '';
 
             if (announcements.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="4" class="p-4 text-center text-slate-400">Yayınlanmış duyuru yok.</td></tr>';
+                tbody.innerHTML = \`<tr><td colspan="4" class="p-4 text-center text-slate-400">Yayınlanmış duyuru yok.</td></tr>\`;
                 return;
             }
 
             announcements.forEach((a) => {
-                tbody.innerHTML += '<tr class="hover:bg-slate-50">' +
-                    '<td class="p-3 text-slate-500 font-semibold">' + a.date + '</td>' +
-                    '<td class="p-3 font-bold text-red-700">' + a.title + '</td>' +
-                    '<td class="p-3 text-slate-700">' + a.body + '</td>' +
-                    '<td class="p-3 text-right">' +
-                    '<button onclick="deleteAnnouncement(' + a.id + ')" class="px-2.5 py-1 bg-red-600 text-white text-[10px] font-bold rounded shadow"><i class="fa-solid fa-trash"></i> Sil</button>' +
-                    '</td>' +
-                    '</tr>';
+                tbody.innerHTML += \`
+                    <tr class="hover:bg-slate-50">
+                        <td class="p-3 text-slate-500 font-semibold">\${a.date}</td>
+                        <td class="p-3 font-bold text-red-700">\${a.title}</td>
+                        <td class="p-3 text-slate-700">\${a.body}</td>
+                        <td class="p-3 text-right">
+                            <button onclick="deleteAnnouncement(\${a.id})" class="px-2.5 py-1 bg-red-600 text-white text-[10px] font-bold rounded shadow"><i class="fa-solid fa-trash"></i> Sil</button>
+                        </td>
+                    </tr>
+                \`;
             });
         }
 
@@ -1274,24 +1223,26 @@ const htmlContent = `<!DOCTYPE html>
                 announcements = announcements.filter(a => a.id !== id);
                 saveState();
                 renderAdminAnnouncements();
-                logActivity("Duyuru Silme", 'Duyuru silindi ID: ' + id);
+                logActivity("Duyuru Silme", \`Duyuru silindi ID: \${id}\`);
                 showToast("Duyuru silindi.", "warning");
             }
         }
 
-        function renderTable(category, tableElementId) {
+        function renderTable(category, tableElementId, showAll = false) {
             const tbody = document.getElementById(tableElementId);
             if (!tbody) return;
             tbody.innerHTML = '';
 
-            const filteredFiles = files.filter(f => f.category === category && f.status !== 'Tamamlandı');
+            const filteredFiles = showAll 
+                ? files.filter(f => f.category === category)
+                : files.filter(f => f.category === category && f.status !== 'Tamamlandı');
 
             if (category === 'inceleme') {
-                document.getElementById('incelemeCount').innerText = filteredFiles.length + ' Aktif Dosya';
+                document.getElementById('incelemeCount').innerText = \`\${filteredFiles.length} Aktif Dosya\`;
             }
 
             if (filteredFiles.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="6" class="p-4 text-center text-slate-400">Dosya bulunmamaktadır.</td></tr>';
+                tbody.innerHTML = \`<tr><td colspan="6" class="p-4 text-center text-slate-400">Dosya bulunmamaktadır.</td></tr>\`;
                 return;
             }
 
@@ -1299,60 +1250,28 @@ const htmlContent = `<!DOCTYPE html>
                 const creatorStaff = USERS.find(u => u.id === f.createdBy)?.name || "Sistem / Admin";
                 const assignedStaff = USERS.find(u => u.id === f.assignedTo)?.name || "Atanmadı";
 
-                let displayDesc = f.description;
-                if (category === 'inceleme' && f.incelemeReason) {
-                    displayDesc = '<strong class="text-red-700">[' + f.incelemeReason + ']</strong> ' + f.description;
-                }
+                let statusBadge = f.status === 'Tamamlandı'
+                    ? \`<span class="bg-blue-100 text-blue-800 text-[10px] font-bold px-2 py-0.5 rounded-full">Tamamlandı</span>\`
+                    : \`<span class="bg-slate-100 text-slate-700 text-[10px] font-bold px-2 py-0.5 rounded-full">İşlemde</span>\`;
 
-                let statusBadge = '<span class="bg-slate-100 text-slate-700 text-[10px] font-bold px-2 py-0.5 rounded-full">İşlemde</span>';
+                const canTransfer = (f.status !== 'Tamamlandı') && (currentUser.isSuperAdmin || (PERMISSIONS[currentUser.id]?.can_transfer && f.assignedTo === currentUser.id));
+                const canComplete = (f.status !== 'Tamamlandı') && (currentUser.isSuperAdmin || (f.assignedTo === currentUser.id));
 
-                const canTransfer = (currentUser.isSuperAdmin || (PERMISSIONS[currentUser.id]?.can_transfer && f.assignedTo === currentUser.id));
-                const canComplete = (currentUser.isSuperAdmin || (f.assignedTo === currentUser.id));
-
-                tbody.innerHTML += '<tr class="hover:bg-slate-50">' +
-                    '<td class="p-3 font-bold text-red-700">' + f.id + '</td>' +
-                    '<td class="p-3 text-slate-600 font-medium">' + displayDesc + '</td>' +
-                    '<td class="p-3 text-slate-600"><i class="fa-solid fa-user-pen text-slate-400 mr-1"></i>' + creatorStaff + '</td>' +
-                    '<td class="p-3 font-medium text-slate-700">' + assignedStaff + '</td>' +
-                    '<td class="p-3">' + statusBadge + '</td>' +
-                    '<td class="p-3 text-right space-x-1">' +
-                    '<button onclick="openFileDetailModal(\'' + f.id + '\')" class="px-2.5 py-1 bg-slate-700 hover:bg-slate-800 text-white text-[11px] font-semibold rounded-lg" title="Detay"><i class="fa-solid fa-eye"></i></button>' +
-                    (canTransfer ? '<button onclick="openTransferModal(\'' + f.id + '\')" class="px-2.5 py-1 bg-amber-500 hover:bg-amber-600 text-white text-[11px] font-semibold rounded-lg">Havale</button>' : '') +
-                    (canComplete ? '<button onclick="openCompleteModal(\'' + f.id + '\')" class="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white text-[11px] font-semibold rounded-lg">Onayla</button>' : '') +
-                    (currentUser.isSuperAdmin ? '<button onclick="deleteFile(\'' + f.id + '\')" class="px-2 py-1 bg-red-100 text-red-700 text-[11px] font-semibold rounded-lg"><i class="fa-solid fa-trash"></i></button>' : '') +
-                    '</td>' +
-                    '</tr>';
-            });
-        }
-
-        function renderMudurTable() {
-            const tbody = document.getElementById('table-mudur');
-            if (!tbody) return;
-            tbody.innerHTML = '';
-
-            const activeMudur = mudurFiles.filter(m => m.status !== 'Tamamlandı');
-
-            if (activeMudur.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="6" class="p-4 text-center text-slate-400">Aktif müdür talimatı bulunmamaktadır.</td></tr>';
-                return;
-            }
-
-            activeMudur.forEach(m => {
-                const creator = USERS.find(u => u.id === m.createdBy)?.name || "Müdürlük";
-                const assigned = USERS.find(u => u.id === m.assignedTo)?.name || "Atanmadı";
-                const canComplete = (currentUser.isSuperAdmin || m.assignedTo === currentUser.id);
-
-                tbody.innerHTML += '<tr class="hover:bg-slate-50">' +
-                    '<td class="p-3 font-bold text-red-700">' + m.id + '</td>' +
-                    '<td class="p-3 text-slate-800 font-medium">' + m.description + '</td>' +
-                    '<td class="p-3 text-slate-600"><i class="fa-solid fa-user-tie text-red-700 mr-1"></i>' + creator + '</td>' +
-                    '<td class="p-3 font-medium text-slate-700">' + assigned + '</td>' +
-                    '<td class="p-3"><span class="bg-amber-100 text-amber-800 text-[10px] font-bold px-2 py-0.5 rounded-full">Talimat Bekliyor</span></td>' +
-                    '<td class="p-3 text-right space-x-1">' +
-                    (canComplete ? '<button onclick="openMudurCompleteModal(\'' + m.id + '\')" class="px-3 py-1 bg-emerald-600 hover:bg-emerald-700 text-white text-[11px] font-bold rounded-lg shadow">Okudum & Açıklama Gir</button>' : '') +
-                    (currentUser.isSuperAdmin ? '<button onclick="deleteMudurFile(\'' + m.id + '\')" class="px-2 py-1 bg-red-100 text-red-700 text-[11px] font-semibold rounded-lg"><i class="fa-solid fa-trash"></i></button>' : '') +
-                    '</td>' +
-                    '</tr>';
+                tbody.innerHTML += \`
+                    <tr class="hover:bg-slate-50">
+                        <td class="p-3 font-bold text-red-700">\${f.id}</td>
+                        <td class="p-3 text-slate-600 font-medium">\${f.description}</td>
+                        <td class="p-3 text-slate-600"><i class="fa-solid fa-user-pen text-slate-400 mr-1"></i>\${creatorStaff}</td>
+                        <td class="p-3 font-medium text-slate-700">\${assignedStaff}</td>
+                        <td class="p-3">\${statusBadge}</td>
+                        <td class="p-3 text-right space-x-1">
+                            <button onclick="openFileDetailModal('\${f.id}')" class="px-2.5 py-1 bg-slate-700 hover:bg-slate-800 text-white text-[11px] font-semibold rounded-lg" title="Detay"><i class="fa-solid fa-eye"></i></button>
+                            \${canTransfer ? \`<button onclick="openTransferModal('\${f.id}')" class="px-2.5 py-1 bg-amber-500 hover:bg-amber-600 text-white text-[11px] font-semibold rounded-lg">Havale</button>\` : ''}
+                            \${canComplete ? \`<button onclick="openCompleteModal('\${f.id}')" class="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white text-[11px] font-semibold rounded-lg">Onayla</button>\` : ''}
+                            \${currentUser.isSuperAdmin ? \`<button onclick="deleteFile('\${f.id}')" class="px-2 py-1 bg-red-100 text-red-700 text-[11px] font-semibold rounded-lg"><i class="fa-solid fa-trash"></i></button>\` : ''}
+                        </td>
+                    </tr>
+                \`;
             });
         }
 
@@ -1364,17 +1283,18 @@ const htmlContent = `<!DOCTYPE html>
             const assignee = USERS.find(u => u.id === f.assignedTo);
 
             const content = document.getElementById('fileDetailModalContent');
-            content.innerHTML = '<div class="space-y-2 bg-slate-50 p-4 rounded-xl border">' +
-                '<div class="flex justify-between border-b pb-2"><strong class="text-slate-500">Referans Numarası:</strong> <span class="font-bold text-red-700">' + f.id + '</span></div>' +
-                '<div class="flex justify-between border-b pb-2"><strong class="text-slate-500">Dosya Kategorisi:</strong> <span class="uppercase font-bold">' + f.category + '</span></div>' +
-                (f.incelemeReason ? '<div class="flex justify-between border-b pb-2"><strong class="text-slate-500">İnceleme Gerekçesi:</strong> <span class="font-bold text-red-700">' + f.incelemeReason + '</span></div>' : '') +
-                '<div class="flex justify-between border-b pb-2"><strong class="text-slate-500">Ekleyen Personel:</strong> <span class="font-bold text-slate-800">' + (creator ? creator.name + ' (ID: ' + creator.id + ')' : 'Sistem') + '</span></div>' +
-                '<div class="flex justify-between border-b pb-2"><strong class="text-slate-500">Eklenme Tarihi / Saati:</strong> <span class="semibold">' + f.createdAt + '</span></div>' +
-                '<div class="flex justify-between border-b pb-2"><strong class="text-slate-500">Atanan Sorumlu Personel:</strong> <span class="font-bold text-slate-800">' + (assignee ? assignee.name + ' (ID: ' + assignee.id + ')' : 'Atanmadı') + '</span></div>' +
-                '<div class="flex justify-between border-b pb-2"><strong class="text-slate-500">Teslim Onay Durumu:</strong> <span>' + (f.deliveredConfirmed ? '✔️ Teslim Alındı' : '⏳ Onay Bekliyor') + '</span></div>' +
-                '<div class="flex justify-between border-b pb-2"><strong class="text-slate-500">Son Durum:</strong> <span class="font-bold">' + f.status + '</span></div>' +
-                '<div><strong class="text-slate-500 block mb-1">Konu / Açıklama / Detay:</strong> <p class="bg-white p-2.5 rounded border text-slate-800">' + f.description + '</p></div>' +
-                '</div>';
+            content.innerHTML = \`
+                <div class="space-y-2 bg-slate-50 p-4 rounded-xl border">
+                    <div class="flex justify-between border-b pb-2"><strong class="text-slate-500">Referans Numarası:</strong> <span class="font-bold text-red-700">\${f.id}</span></div>
+                    <div class="flex justify-between border-b pb-2"><strong class="text-slate-500">Dosya Kategorisi:</strong> <span class="uppercase font-bold">\${f.category}</span></div>
+                    <div class="flex justify-between border-b pb-2"><strong class="text-slate-500">Sisteme Ekleyen Personel:</strong> <span class="font-bold text-slate-800">\${creator ? creator.name + ' (ID: ' + creator.id + ')' : 'Sistem'}</span></div>
+                    <div class="flex justify-between border-b pb-2"><strong class="text-slate-500">Eklenme Tarihi / Saati:</strong> <span class="semibold">\${f.createdAt}</span></div>
+                    <div class="flex justify-between border-b pb-2"><strong class="text-slate-500">Atanan Sorumlu Personel:</strong> <span class="font-bold text-slate-800">\${assignee ? assignee.name + ' (ID: ' + assignee.id + ')' : 'Atanmadı'}</span></div>
+                    <div class="flex justify-between border-b pb-2"><strong class="text-slate-500">Teslim Onay Durumu:</strong> <span>\${f.deliveredConfirmed ? '✔️ Teslim Alındı' : '⏳ Onay Bekliyor'}</span></div>
+                    <div class="flex justify-between border-b pb-2"><strong class="text-slate-500">Son Durum:</strong> <span class="font-bold">\${f.status}</span></div>
+                    <div><strong class="text-slate-500 block mb-1">Konu / Açıklama / Detay:</strong> <p class="bg-white p-2.5 rounded border text-slate-800">\${f.description}</p></div>
+                </div>
+            \`;
             document.getElementById('fileDetailModal').classList.remove('hidden');
         }
 
@@ -1386,50 +1306,54 @@ const htmlContent = `<!DOCTYPE html>
             USERS.filter(u => !u.isSuperAdmin).forEach(staff => {
                 const staffFiles = files.filter(f => f.assignedTo === staff.id);
                 
-                container.innerHTML += '<div class="bg-white border rounded-2xl p-4 shadow-sm flex flex-col justify-between hover:shadow-md transition">' +
-                    '<div>' +
-                    '<div class="flex items-center justify-between mb-3 border-b pb-2">' +
-                    '<h4 class="font-bold text-xs text-slate-800">' + staff.name + ' <span class="text-[10px] text-slate-400 font-normal">(ID: ' + staff.id + ')</span></h4>' +
-                    '<span class="bg-red-100 text-red-800 text-[10px] font-bold px-2.5 py-0.5 rounded-full">' + staffFiles.length + ' Dosya Arşivi</span>' +
-                    '</div>' +
-                    '<p class="text-[11px] text-slate-500 mb-3">Personelin üzerine kayıtlı tüm 3 yıllık dosya geçmişi.</p>' +
-                    '</div>' +
-                    '<button onclick="openStaffArchiveModal(' + staff.id + ', \'' + staff.name + '\')" class="w-full py-2 bg-slate-100 hover:bg-red-700 hover:text-white text-slate-700 font-bold text-xs rounded-xl transition flex items-center justify-center space-x-2">' +
-                    '<i class="fa-solid fa-folder-open"></i>' +
-                    '<span>Arşiv Dosyalarını Görüntüle</span>' +
-                    '</button>' +
-                    '</div>';
+                container.innerHTML += \`
+                    <div class="bg-white border rounded-2xl p-4 shadow-sm flex flex-col justify-between hover:shadow-md transition">
+                        <div>
+                            <div class="flex items-center justify-between mb-3 border-b pb-2">
+                                <h4 class="font-bold text-xs text-slate-800">\${staff.name} <span class="text-[10px] text-slate-400 font-normal">(ID: \${staff.id})</span></h4>
+                                <span class="bg-red-100 text-red-800 text-[10px] font-bold px-2.5 py-0.5 rounded-full">\${staffFiles.length} Dosya Arşivi</span>
+                            </div>
+                            <p class="text-[11px] text-slate-500 mb-3">Personelin üzerine kayıtlı tüm 3 yıllık dosya geçmişi.</p>
+                        </div>
+                        <button onclick="openStaffArchiveModal(\${staff.id}, '\${staff.name}')" class="w-full py-2 bg-slate-100 hover:bg-red-700 hover:text-white text-slate-700 font-bold text-xs rounded-xl transition flex items-center justify-center space-x-2">
+                            <i class="fa-solid fa-folder-open"></i>
+                            <span>Arşiv Dosyalarını Görüntüle</span>
+                        </button>
+                    </div>
+                \`;
             });
         }
 
         function openStaffArchiveModal(staffId, staffName) {
-            document.getElementById('archiveModalTitle').innerHTML = '<i class="fa-solid fa-folder-open"></i><span>' + staffName + ' - 3 Yıllık Dosya Arşivi</span>';
+            document.getElementById('archiveModalTitle').innerHTML = \`<i class="fa-solid fa-folder-open"></i><span>\${staffName} - 3 Yıllık Dosya Arşivi</span>\`;
             const contentContainer = document.getElementById('staffArchiveContent');
             contentContainer.innerHTML = '';
 
             const staffFiles = files.filter(f => f.assignedTo === staffId);
 
             if (staffFiles.length === 0) {
-                contentContainer.innerHTML = '<p class="text-xs text-slate-400 text-center py-6">Bu personele ait kayıtlı dosya bulunmamaktadır.</p>';
+                contentContainer.innerHTML = \`<p class="text-xs text-slate-400 text-center py-6">Bu personele ait kayıtlı dosya bulunmamaktadır.</p>\`;
             } else {
                 staffFiles.forEach(sf => {
                     let statusText = sf.status === 'Tamamlandı' 
                         ? '<span class="bg-blue-100 text-blue-800 text-[10px] font-bold px-2 py-0.5 rounded-full">Tamamlandı</span>' 
                         : '<span class="bg-amber-100 text-amber-800 text-[10px] font-bold px-2 py-0.5 rounded-full">Aktif / İşlemde</span>';
                     
-                    contentContainer.innerHTML += '<div class="p-3.5 bg-slate-50 border rounded-xl text-xs flex items-center justify-between gap-3 shadow-sm">' +
-                        '<div>' +
-                        '<div class="flex items-center space-x-2">' +
-                        '<span class="font-bold text-red-700">Ref: ' + sf.id + '</span>' +
-                        '<span class="text-[10px] uppercase font-bold text-slate-400 bg-white px-2 py-0.5 border rounded">' + sf.category + '</span>' +
-                        '</div>' +
-                        '<div class="text-slate-700 font-medium mt-1">' + sf.description + '</div>' +
-                        '</div>' +
-                        '<div class="text-right flex flex-col items-end gap-1.5 shrink-0">' +
-                        statusText +
-                        '<span class="text-[10px] text-slate-400">Ekleyen ID: ' + sf.createdBy + '</span>' +
-                        '</div>' +
-                        '</div>';
+                    contentContainer.innerHTML += \`
+                        <div class="p-3.5 bg-slate-50 border rounded-xl text-xs flex items-center justify-between gap-3 shadow-sm">
+                            <div>
+                                <div class="flex items-center space-x-2">
+                                    <span class="font-bold text-red-700">Ref: \${sf.id}</span>
+                                    <span class="text-[10px] uppercase font-bold text-slate-400 bg-white px-2 py-0.5 border rounded">\${sf.category}</span>
+                                </div>
+                                <div class="text-slate-700 font-medium mt-1">\${sf.description}</div>
+                            </div>
+                            <div class="text-right flex flex-col items-end gap-1.5 shrink-0">
+                                \${statusText}
+                                <span class="text-[10px] text-slate-400">Ekleyen ID: \${sf.createdBy}</span>
+                            </div>
+                        </div>
+                    \`;
                 });
             }
 
@@ -1441,41 +1365,32 @@ const htmlContent = `<!DOCTYPE html>
             if (!tbody) return;
             tbody.innerHTML = '';
 
-            const allCombined = [...files, ...mudurFiles];
-            if (allCombined.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="6" class="p-4 text-center text-slate-400">Sistemde hiç dosya yok.</td></tr>';
+            if (files.length === 0) {
+                tbody.innerHTML = \`<tr><td colspan="6" class="p-4 text-center text-slate-400">Sistemde hiç dosya yok.</td></tr>\`;
                 return;
             }
 
-            allCombined.forEach(f => {
+            files.forEach(f => {
                 const creator = USERS.find(u => u.id === f.createdBy)?.name || "Sistem";
                 const staffName = USERS.find(u => u.id === f.assignedTo)?.name || "Atanmadı";
                 let statusBadge = f.status === 'Tamamlandı'
-                    ? '<span class="bg-blue-100 text-blue-800 text-[10px] font-bold px-2 py-0.5 rounded-full">Tamamlandı</span>'
-                    : '<span class="bg-slate-100 text-slate-700 text-[10px] font-bold px-2 py-0.5 rounded-full">İşlemde</span>';
+                    ? \`<span class="bg-blue-100 text-blue-800 text-[10px] font-bold px-2 py-0.5 rounded-full">Tamamlandı</span>\`
+                    : \`<span class="bg-slate-100 text-slate-700 text-[10px] font-bold px-2 py-0.5 rounded-full">İşlemde</span>\`;
 
-                tbody.innerHTML += '<tr class="hover:bg-slate-50">' +
-                    '<td class="p-3 font-bold text-red-700">' + f.id + '</td>' +
-                    '<td class="p-3 uppercase text-[10px] font-bold text-slate-500">' + (f.category || 'MÜDÜR') + '</td>' +
-                    '<td class="p-3 text-slate-600">' + creator + '</td>' +
-                    '<td class="p-3 font-medium">' + staffName + '</td>' +
-                    '<td class="p-3">' + statusBadge + '</td>' +
-                    '<td class="p-3 text-right space-x-1">' +
-                    '<button onclick="deleteFileCompletely(\'' + f.id + '\')" class="px-2.5 py-1 bg-red-600 text-white text-[11px] font-bold rounded-lg shadow"><i class="fa-solid fa-trash"></i></button>' +
-                    '</td>' +
-                    '</tr>';
+                tbody.innerHTML += \`
+                    <tr class="hover:bg-slate-50">
+                        <td class="p-3 font-bold text-red-700">\${f.id}</td>
+                        <td class="p-3 uppercase text-[10px] font-bold text-slate-500">\${f.category}</td>
+                        <td class="p-3 text-slate-600">\${creator}</td>
+                        <td class="p-3 font-medium">\${staffName}</td>
+                        <td class="p-3">\${statusBadge}</td>
+                        <td class="p-3 text-right space-x-1">
+                            <button onclick="openFileDetailModal('\${f.id}')" class="px-2.5 py-1 bg-slate-700 text-white text-[10px] rounded"><i class="fa-solid fa-eye"></i></button>
+                            <button onclick="deleteFile('\${f.id}')" class="px-2.5 py-1 bg-red-600 text-white text-[11px] font-bold rounded-lg shadow"><i class="fa-solid fa-trash"></i></button>
+                        </td>
+                    </tr>
+                \`;
             });
-        }
-
-        function deleteFileCompletely(fileId) {
-            if (!currentUser.isSuperAdmin) return;
-            if (confirm("Bu kaydı tamamen silmek istediğinize emin misiniz?")) {
-                files = files.filter(f => f.id !== fileId);
-                mudurFiles = mudurFiles.filter(m => m.id !== fileId);
-                saveState();
-                renderAllTables();
-                showToast("Kayıt sistemden silindi.", "warning");
-            }
         }
 
         function renderActivityLogs() {
@@ -1484,17 +1399,19 @@ const htmlContent = `<!DOCTYPE html>
             tbody.innerHTML = '';
 
             if (activityLogs.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="4" class="p-4 text-center text-slate-400">Henüz kaydedilmiş işlem logu bulunmamaktadır.</td></tr>';
+                tbody.innerHTML = \`<tr><td colspan="4" class="p-4 text-center text-slate-400">Henüz kaydedilmiş işlem logu bulunmamaktadır.</td></tr>\`;
                 return;
             }
 
             activityLogs.forEach(log => {
-                tbody.innerHTML += '<tr class="hover:bg-slate-50">' +
-                    '<td class="p-3 font-semibold text-slate-500">' + log.time + '</td>' +
-                    '<td class="p-3 font-bold text-slate-800">' + log.userName + ' <span class="text-[10px] text-blue-600 font-mono">[ID: ' + log.userId + ']</span></td>' +
-                    '<td class="p-3"><span class="bg-red-50 text-red-800 border border-red-200 text-[10px] font-bold px-2 py-0.5 rounded">' + log.type + '</span></td>' +
-                    '<td class="p-3 text-slate-700">' + log.detail + '</td>' +
-                    '</tr>';
+                tbody.innerHTML += \`
+                    <tr class="hover:bg-slate-50">
+                        <td class="p-3 font-semibold text-slate-500">\${log.time}</td>
+                        <td class="p-3 font-bold text-slate-800">\${log.userName} <span class="text-[10px] text-blue-600 font-mono">[ID: \${log.userId}]</span></td>
+                        <td class="p-3"><span class="bg-red-50 text-red-800 border border-red-200 text-[10px] font-bold px-2 py-0.5 rounded">\${log.type}</span></td>
+                        <td class="p-3 text-slate-700">\${log.detail}</td>
+                    </tr>
+                \`;
             });
         }
 
@@ -1513,33 +1430,43 @@ const htmlContent = `<!DOCTYPE html>
             if (!tbody) return;
             tbody.innerHTML = '';
             if (rejectionLogs.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="6" class="p-4 text-center text-slate-400">Henüz dosya reddi bulunmamaktadır.</td></tr>';
+                tbody.innerHTML = \`<tr><td colspan="6" class="p-4 text-center text-slate-400">Henüz dosya reddi bulunmamaktadır.</td></tr>\`;
                 return;
             }
             rejectionLogs.forEach((log, index) => {
-                tbody.innerHTML += '<tr class="hover:bg-slate-50">' +
-                    '<td class="p-3">' + log.date + '</td>' +
-                    '<td class="p-3 font-bold">' + log.staffName + '</td>' +
-                    '<td class="p-3 text-red-700 font-bold">' + log.fileId + '</td>' +
-                    '<td class="p-3">' + log.subject + '</td>' +
-                    '<td class="p-3 text-red-800 font-semibold bg-red-50">' + log.reason + '</td>' +
-                    '<td class="p-3 text-right space-x-1">' +
-                    '<button onclick="adminActionDelete(\'' + log.fileId + '\', ' + index + ')" class="px-2 py-1 bg-red-600 text-white text-[10px] font-semibold rounded shadow">Sil</button>' +
-                    '</td>' +
-                    '</tr>';
+                tbody.innerHTML += \`
+                    <tr class="hover:bg-slate-50">
+                        <td class="p-3">\${log.date}</td>
+                        <td class="p-3 font-bold">\${log.staffName}</td>
+                        <td class="p-3 text-red-700 font-bold">\${log.fileId}</td>
+                        <td class="p-3">\${log.subject}</td>
+                        <td class="p-3 text-red-800 font-semibold bg-red-50">\${log.reason}</td>
+                        <td class="p-3 text-right space-x-1">
+                            <button onclick="adminActionTransfer('\${log.fileId}', \${index})" class="px-2 py-1 bg-amber-500 text-white text-[10px] font-semibold rounded shadow">Havale</button>
+                            <button onclick="adminActionDelete('\${log.fileId}', \${index})" class="px-2 py-1 bg-red-600 text-white text-[10px] font-semibold rounded shadow">Sil</button>
+                        </td>
+                    </tr>
+                \`;
             });
         }
 
+        function adminActionTransfer(fileId, logIndex) {
+            openTransferModal(fileId);
+            rejectionLogs.splice(logIndex, 1);
+            saveState();
+            renderRejectionLogs();
+            checkAdminRedNotifications();
+        }
+
         function adminActionDelete(fileId, logIndex) {
-            if (confirm("Bu reddedilen kaydı silmek istediğinize emin misiniz?")) {
+            if (confirm("Bu reddedilen dosyayı silmek istediğinize emin misiniz?")) {
                 files = files.filter(f => f.id !== fileId);
-                mudurFiles = mudurFiles.filter(m => m.id !== fileId);
                 rejectionLogs.splice(logIndex, 1);
                 saveState();
                 renderAllTables();
                 renderRejectionLogs();
                 checkAdminRedNotifications();
-                showToast("Kayıt silindi.", "warning");
+                showToast("Dosya silindi.", "warning");
             }
         }
 
@@ -1552,7 +1479,7 @@ const htmlContent = `<!DOCTYPE html>
 
             const newId = Date.now();
             USERS.push({ id: newId, name: name, role: role, isSuperAdmin: false, pass: "123456" });
-            PERMISSIONS[newId] = { add_inceleme: true, add_sikayet: true, add_hastane: false, add_toplanti: false, can_transfer: true };
+            PERMISSIONS[newId] = { add_inceleme: true, add_mudur: false, add_sikayet: true, add_hastane: false, add_toplanti: false, can_transfer: true };
 
             saveState();
             initUserDropdown();
@@ -1560,7 +1487,7 @@ const htmlContent = `<!DOCTYPE html>
             renderKimdeMatrixModalCards();
             document.getElementById('newStaffName').value = '';
             document.getElementById('newStaffRole').value = '';
-            logActivity("Personel Tanımlama", 'Yeni personel eklendi: ' + name + ' [ID: ' + newId + '] (Şifre: 123456)');
+            logActivity("Personel Tanımlama", \`Yeni personel eklendi: \${name} [ID: \${newId}] (Varsayılan Şifre: 123456)\`);
             showToast("Yeni personel eklendi (Şifresi: 123456).", "success");
         }
 
@@ -1569,12 +1496,12 @@ const htmlContent = `<!DOCTYPE html>
             const staff = USERS.find(u => u.id === staffId);
             if (!staff) return;
 
-            if (confirm('"' + staff.name + '" adlı personelin şifresini 123456 olarak sıfırlamak istediğinize emin misiniz?')) {
+            if (confirm(\`"\${staff.name}" adlı personelin şifresini 123456 (varsayılan) olarak sıfırlamak istediğinize emin misiniz? Personel bir sonraki girişinde şifresini değiştirmek zorunda kalacaktır.\`)) {
                 staff.pass = "123456";
                 saveState();
                 renderPermissionsMatrix();
-                logActivity("Şifre Sıfırlama", 'Personel şifresi sıfırlandı: ' + staff.name);
-                showToast(staff.name + ' adlı personelin şifresi sıfırlandı.', "warning");
+                logActivity("Şifre Sıfırlama", \`Personel şifresi varsayılana (123456) döndürüldü: \${staff.name} [ID: \${staff.id}]\`);
+                showToast(\`\${staff.name} adlı personelin şifresi sıfırlandı.\`, "warning");
             }
         }
 
@@ -1587,7 +1514,7 @@ const htmlContent = `<!DOCTYPE html>
                 initUserDropdown();
                 renderPermissionsMatrix();
                 renderKimdeMatrixModalCards();
-                logActivity("Personel Silme", 'Personel silindi ID: ' + staffId);
+                logActivity("Personel Silme", \`Personel silindi ID: \${staffId}\`);
                 showToast("Personel silindi.", "warning");
             }
         }
@@ -1599,23 +1526,26 @@ const htmlContent = `<!DOCTYPE html>
 
             USERS.filter(u => !u.isSuperAdmin).forEach(staff => {
                 const p = PERMISSIONS[staff.id] || {};
-                container.innerHTML += '<div class="p-4 bg-slate-50 border rounded-2xl flex flex-wrap items-center justify-between gap-4">' +
-                    '<div>' +
-                    '<h5 class="font-bold text-xs">' + staff.name + ' <span class="text-[11px] text-blue-600 font-mono">[ID: ' + staff.id + ']</span></h5>' +
-                    '<p class="text-[10px] text-slate-500">' + staff.role + '</p>' +
-                    '</div>' +
-                    '<div class="flex flex-wrap items-center gap-2 text-xs">' +
-                    '<button onclick="resetStaffPassword(' + staff.id + ')" class="bg-amber-600 hover:bg-amber-700 text-white text-[10px] px-2.5 py-1.5 rounded-lg font-bold shadow flex items-center space-x-1 mr-2">' +
-                    '<i class="fa-solid fa-rotate-right"></i><span>Şifreyi Sıfırla (123456)</span>' +
-                    '</button>' +
-                    '<label class="bg-white p-1.5 border rounded cursor-pointer"><input type="checkbox" ' + (p.add_inceleme ? 'checked' : '') + ' onchange="togglePermission(' + staff.id + ', \'add_inceleme\')"> İnceleme</label>' +
-                    '<label class="bg-white p-1.5 border rounded cursor-pointer"><input type="checkbox" ' + (p.add_sikayet ? 'checked' : '') + ' onchange="togglePermission(' + staff.id + ', \'add_sikayet\')"> Şikayet</label>' +
-                    '<label class="bg-white p-1.5 border rounded cursor-pointer"><input type="checkbox" ' + (p.add_hastane ? 'checked' : '') + ' onchange="togglePermission(' + staff.id + ', \'add_hastane\')"> Hastane</label>' +
-                    '<label class="bg-white p-1.5 border rounded cursor-pointer"><input type="checkbox" ' + (p.add_toplanti ? 'checked' : '') + ' onchange="togglePermission(' + staff.id + ', \'add_toplanti\')"> Toplantı</label>' +
-                    '<label class="bg-amber-50 p-1.5 border border-amber-300 rounded cursor-pointer font-bold"><input type="checkbox" ' + (p.can_transfer ? 'checked' : '') + ' onchange="togglePermission(' + staff.id + ', \'can_transfer\')"> Havale</label>' +
-                    '<button onclick="deleteStaff(' + staff.id + ')" class="bg-red-600 text-white text-[10px] px-2 py-1 rounded font-bold ml-2">Sil</button>' +
-                    '</div>' +
-                    '</div>';
+                container.innerHTML += \`
+                    <div class="p-4 bg-slate-50 border rounded-2xl flex flex-wrap items-center justify-between gap-4">
+                        <div>
+                            <h5 class="font-bold text-xs">\${staff.name} <span class="text-[11px] text-blue-600 font-mono">[ID Adresi/No: \${staff.id}]</span></h5>
+                            <p class="text-[10px] text-slate-500">\${staff.role}</p>
+                        </div>
+                        <div class="flex flex-wrap items-center gap-2 text-xs">
+                            <button onclick="resetStaffPassword(\${staff.id})" class="bg-amber-600 hover:bg-amber-700 text-white text-[10px] px-2.5 py-1.5 rounded-lg font-bold shadow flex items-center space-x-1 mr-2" title="Şifreyi 123456 yap">
+                                <i class="fa-solid fa-rotate-right"></i><span>Şifreyi Sıfırla (123456)</span>
+                            </button>
+                            <label class="bg-white p-1.5 border rounded cursor-pointer"><input type="checkbox" \${p.add_inceleme ? 'checked' : ''} onchange="togglePermission(\${staff.id}, 'add_inceleme')"> İnceleme</label>
+                            <label class="bg-white p-1.5 border rounded cursor-pointer"><input type="checkbox" \${p.add_mudur ? 'checked' : ''} onchange="togglePermission(\${staff.id}, 'add_mudur')"> Müdür</label>
+                            <label class="bg-white p-1.5 border rounded cursor-pointer"><input type="checkbox" \${p.add_sikayet ? 'checked' : ''} onchange="togglePermission(\${staff.id}, 'add_sikayet')"> Şikayet</label>
+                            <label class="bg-white p-1.5 border rounded cursor-pointer"><input type="checkbox" \${p.add_hastane ? 'checked' : ''} onchange="togglePermission(\${staff.id}, 'add_hastane')"> Hastane</label>
+                            <label class="bg-white p-1.5 border rounded cursor-pointer"><input type="checkbox" \${p.add_toplanti ? 'checked' : ''} onchange="togglePermission(\${staff.id}, 'add_toplanti')"> Toplantı</label>
+                            <label class="bg-amber-50 p-1.5 border border-amber-300 rounded cursor-pointer font-bold"><input type="checkbox" \${p.can_transfer ? 'checked' : ''} onchange="togglePermission(\${staff.id}, 'can_transfer')"> Havale</label>
+                            <button onclick="deleteStaff(\${staff.id})" class="bg-red-600 text-white text-[10px] px-2 py-1 rounded font-bold ml-2">Sil</button>
+                        </div>
+                    </div>
+                \`;
             });
         }
 
@@ -1623,7 +1553,7 @@ const htmlContent = `<!DOCTYPE html>
             if (!PERMISSIONS[staffId]) PERMISSIONS[staffId] = {};
             PERMISSIONS[staffId][key] = !PERMISSIONS[staffId][key];
             saveState();
-            logActivity("Yetki Güncelleme", 'Personel ID: ' + staffId + ' yetkisi değiştirildi.');
+            logActivity("Yetki Güncelleme", \`Personel ID: \${staffId} yetkisi değiştirildi.\`);
             updateAddButtonVisibility();
             showToast("Yetki güncellendi.", "success");
         }
@@ -1632,66 +1562,20 @@ const htmlContent = `<!DOCTYPE html>
             const select = document.getElementById('formAssignee');
             select.innerHTML = '';
             USERS.filter(u => !u.isSuperAdmin).forEach(u => {
-                select.innerHTML += '<option value="' + u.id + '">[ID: ' + u.id + '] ' + u.name + ' (' + u.role + ')</option>';
+                select.innerHTML += \`<option value="\${u.id}">[ID: \${u.id}] \${u.name} (\${u.role})</option>\`;
             });
 
             const catSelect = document.getElementById('formCategory');
-            if (activeTab === 'tab-sikayet') catSelect.value = 'sikayet';
+            if (activeTab === 'tab-mudur') catSelect.value = 'mudur';
+            else if (activeTab === 'tab-sikayet') catSelect.value = 'sikayet';
             else if (activeTab === 'tab-hastane') catSelect.value = 'hastane';
             else if (activeTab === 'tab-toplanti') catSelect.value = 'toplanti';
             else catSelect.value = 'inceleme';
-
-            onCategoryChange(catSelect.value);
 
             document.getElementById('formRefNo').value = '';
             document.getElementById('formDescription').value = '';
             document.getElementById('historyMatchAlert').classList.add('hidden');
             document.getElementById('newFileModal').classList.remove('hidden');
-        }
-
-        function onCategoryChange(cat) {
-            const reasonCont = document.getElementById('incelemeReasonContainer');
-            if (cat === 'inceleme') {
-                reasonCont.classList.remove('hidden');
-            } else {
-                reasonCont.classList.add('hidden');
-            }
-        }
-
-        function openMudurModal() {
-            const select = document.getElementById('mudurAssignee');
-            select.innerHTML = '';
-            USERS.filter(u => !u.isSuperAdmin).forEach(u => {
-                select.innerHTML += '<option value="' + u.id + '">[ID: ' + u.id + '] ' + u.name + ' (' + u.role + ')</option>';
-            });
-            document.getElementById('mudurRefNo').value = '';
-            document.getElementById('mudurDescription').value = '';
-            document.getElementById('mudurModal').classList.remove('hidden');
-        }
-
-        function handleMudurSubmit(e) {
-            e.preventDefault();
-            const refInput = document.getElementById('mudurRefNo');
-            autoFormatRef(refInput);
-            const refNo = refInput.value.trim();
-            const description = document.getElementById('mudurDescription').value.trim();
-            const assigneeId = parseInt(document.getElementById('mudurAssignee').value);
-
-            mudurFiles.unshift({
-                id: refNo,
-                description: description,
-                assignedTo: assigneeId,
-                createdBy: currentUser.id,
-                createdAt: new Date().toLocaleString('tr-TR'),
-                deliveredConfirmed: false,
-                status: "İşlemde"
-            });
-
-            saveState();
-            renderAllTables();
-            closeModal('mudurModal');
-            logActivity("Müdür Talimatı", 'Ref: ' + refNo + ' nolu müdür talimatı yayınlandı.');
-            showToast("Müdür talimatı ilgili personele gönderildi.", "success");
         }
 
         function checkHistoryMatch(val) {
@@ -1704,10 +1588,9 @@ const htmlContent = `<!DOCTYPE html>
             val = val.trim().toUpperCase();
             let foundFile = null;
             files.forEach(f => {
-                if (f.id && f.id.toUpperCase() === val) foundFile = f;
-            });
-            mudurFiles.forEach(m => {
-                if (m.id && m.id.toUpperCase() === val) foundFile = m;
+                if (f.id && f.id.toUpperCase() === val) {
+                    foundFile = f;
+                }
             });
 
             const alertBox = document.getElementById('historyMatchAlert');
@@ -1720,7 +1603,7 @@ const htmlContent = `<!DOCTYPE html>
                 const foundDate = foundFile.createdAt || "tarih belirtilmemiş";
                 
                 if (alertText && alertBox) {
-                    alertText.innerHTML = 'Bu referans numarası daha önce <strong>' + foundStaffName + '</strong> adlı personele <strong>' + foundDate + '</strong> tarihinde verilmiştir!';
+                    alertText.innerHTML = \`Bu referans numarası daha önce <strong>\${foundStaffName}</strong> adlı personele <strong>\${foundDate}</strong> tarihinde verilmiştir!\`;
                     alertBox.classList.remove('hidden');
                 }
                 if (select) select.value = foundFile.assignedTo;
@@ -1733,30 +1616,32 @@ const htmlContent = `<!DOCTYPE html>
             e.preventDefault();
             const category = document.getElementById('formCategory').value;
             const refInput = document.getElementById('formRefNo');
+            
             autoFormatRef(refInput);
             const refNo = refInput.value.trim();
 
             const description = document.getElementById('formDescription').value.trim();
             const assigneeId = parseInt(document.getElementById('formAssignee').value);
-            const incelemeReason = category === 'inceleme' ? document.getElementById('formIncelemeReason').value : null;
 
-            files.unshift({
+            const nowStr = new Date().toLocaleString('tr-TR');
+
+            const newFile = {
                 id: refNo,
                 category: category,
-                incelemeReason: incelemeReason,
                 description: description,
                 assignedTo: assigneeId,
                 createdBy: currentUser.id,
-                createdAt: new Date().toLocaleString('tr-TR'),
+                createdAt: nowStr,
                 deliveredConfirmed: false,
                 status: "İşlemde"
-            });
+            };
 
+            files.unshift(newFile);
             saveState();
             renderAllTables();
             closeModal('newFileModal');
-            logActivity("Dosya Oluşturma", 'Ref: ' + refNo + ' (' + category.toUpperCase() + ') eklendi.');
-            showToast(refNo + ' referanslı yeni dosya oluşturuldu.', 'success');
+            logActivity("Dosya Oluşturma", \`Ref: \${refNo} (\${category.toUpperCase()}) dosyası eklendi.\`);
+            showToast(\`\${refNo} referanslı yeni dosya oluşturuldu.\`, 'success');
         }
 
         function openTransferModal(fileId) {
@@ -1770,7 +1655,7 @@ const htmlContent = `<!DOCTYPE html>
             const select = document.getElementById('transferTargetStaff');
             select.innerHTML = '';
             USERS.filter(u => !u.isSuperAdmin && u.id !== file.assignedTo).forEach(u => {
-                select.innerHTML += '<option value="' + u.id + '">[ID: ' + u.id + '] ' + u.name + ' (' + u.role + ')</option>';
+                select.innerHTML += \`<option value="\${u.id}">[ID: \${u.id}] \${u.name} (\${u.role})</option>\`;
             });
 
             document.getElementById('transferModal').classList.remove('hidden');
@@ -1789,27 +1674,13 @@ const htmlContent = `<!DOCTYPE html>
                 saveState();
                 renderAllTables();
                 closeModal('transferModal');
-                logActivity("Dosya Havale", 'Ref: ' + fileId + ' nolu dosya ' + (targetStaff ? targetStaff.name : 'personele') + ' havale edildi.');
+                logActivity("Dosya Havale", \`Ref: \${fileId} nolu dosya \${targetStaff ? targetStaff.name : 'personele'} havale edildi.\`);
                 showToast("Dosya havale edildi.", "info");
             }
         }
 
-        let currentCompletingMudurId = null;
-        function openMudurCompleteModal(mudurId) {
-            currentCompletingMudurId = mudurId;
-            document.getElementById('completeFileId').value = mudurId;
-            document.getElementById('completeModalTitle').innerText = "Müdür Talimatı Açıklaması & Onayı";
-            document.getElementById('completeNoteLabel').innerText = "Talimat Sonuç / Açıklama Notu";
-            document.getElementById('completeNote').value = '';
-            document.getElementById('completeModal').classList.remove('hidden');
-        }
-
         function openCompleteModal(fileId) {
-            currentCompletingMudurId = null;
             document.getElementById('completeFileId').value = fileId;
-            document.getElementById('completeModalTitle').innerText = "Dosya İşlemini Tamamla & Onayla";
-            document.getElementById('completeNoteLabel').innerText = "İnceleme / Sonuç Notu";
-            document.getElementById('completeNote').value = '';
             document.getElementById('completeModal').classList.remove('hidden');
         }
 
@@ -1817,31 +1688,15 @@ const htmlContent = `<!DOCTYPE html>
             e.preventDefault();
             const fileId = document.getElementById('completeFileId').value;
             const note = document.getElementById('completeNote').value;
-
-            if (currentCompletingMudurId) {
-                const m = mudurFiles.find(x => x.id === fileId);
-                if (m) {
-                    m.status = "Tamamlandı";
-                    m.note = note;
-                    saveState();
-                    renderAllTables();
-                    closeModal('completeModal');
-                    logActivity("Müdür Talimatı Tamamlama", 'Ref: ' + fileId + ' talimatı onaylandı. Not: ' + note);
-                    showToast("Müdür talimatı tamamlandı.", "success");
-                }
-            } else {
-                const file = files.find(f => f.id === fileId);
-                if (file) {
-                    file.status = "Tamamlandı";
-                    file.note = note;
-                    saveState();
-                    renderAllTables();
-                    closeModal('completeModal');
-                    logActivity("Dosya Tamamlama", 'Ref: ' + fileId + ' onaylandı. Not: ' + note);
-                    showToast("Dosya tamamlandı ve 3 yıllık arşive işlendi.", "success");
-                }
+            const file = files.find(f => f.id === fileId);
+            if (file) {
+                file.status = "Tamamlandı";
+                saveState();
+                renderAllTables();
+                closeModal('completeModal');
+                logActivity("Dosya Tamamlama", \`Ref: \${fileId} nolu dosya onaylandı. Not: \${note}\`);
+                showToast("Dosya tamamlandı ve 3 yıllık arşive işlendi.", "success");
             }
-            currentCompletingMudurId = null;
         }
 
         function deleteFile(fileId) {
@@ -1850,19 +1705,8 @@ const htmlContent = `<!DOCTYPE html>
                 files = files.filter(f => f.id !== fileId);
                 saveState();
                 renderAllTables();
-                logActivity("Dosya Silme", 'Ref: ' + fileId + ' silindi.');
+                logActivity("Dosya Silme", \`Ref: \${fileId} nolu dosya silindi.\`);
                 showToast("Dosya silindi.", "warning");
-            }
-        }
-
-        function deleteMudurFile(mudurId) {
-            if (!currentUser.isSuperAdmin) return;
-            if (confirm("Bu müdür talimatını silmek istediğinize emin misiniz?")) {
-                mudurFiles = mudurFiles.filter(m => m.id !== mudurId);
-                saveState();
-                renderAllTables();
-                logActivity("Müdür Talimatı Silme", 'Ref: ' + mudurId + ' silindi.');
-                showToast("Müdür talimatı silindi.", "warning");
             }
         }
 
@@ -1876,22 +1720,16 @@ const htmlContent = `<!DOCTYPE html>
         function showToast(msg, type='info') {
             const container = document.getElementById('toastContainer');
             const toast = document.createElement('div');
-            toast.className = 'bg-slate-800 text-white p-3 rounded-xl shadow text-xs font-semibold flex justify-between';
-            toast.innerHTML = '<span>' + msg + '</span><button onclick="this.parentElement.remove()" class="ml-2">✕</button>';
+            toast.className = \`bg-slate-800 text-white p-3 rounded-xl shadow text-xs font-semibold flex justify-between\`;
+            toast.innerHTML = \`<span>\${msg}</span><button onclick="this.parentElement.remove()" class="ml-2">✕</button>\`;
             container.appendChild(toast);
             setTimeout(() => toast.remove(), 3000);
         }
     </script>
 </body>
-</html>`;
-
-app.get('/', (req, res) => {
-    res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
-    res.setHeader('Pragma', 'no-cache');
-    res.setHeader('Expires', '0');
-    res.send(htmlContent);
+</html>`);
 });
 
 app.listen(PORT, () => {
-    console.log(`Kırşehir SYDV Kurumsal Portal çalışıyor: http://localhost:${PORT}`);
+    console.log(`Kırşehir SYDV Kurumsal Portal çalışıyor: http://localhost:\${PORT}`);
 });
