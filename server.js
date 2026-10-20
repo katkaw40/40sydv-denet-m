@@ -823,6 +823,7 @@ app.get('/', (req, res) => {
             }
 
             input.value = val;
+            checkHistoryMatch(input.value);
         }
 
         function logActivity(actionType, detail) {
@@ -1578,16 +1579,17 @@ app.get('/', (req, res) => {
         }
 
         function checkHistoryMatch(val) {
-            if (!val || val.length < 3) {
+            if (!val || val.trim().length < 2) {
                 const alertBox = document.getElementById('historyMatchAlert');
                 if (alertBox) alertBox.classList.add('hidden');
                 return;
             }
 
-            let foundStaffId = null;
+            val = val.trim().toUpperCase();
+            let foundFile = null;
             files.forEach(f => {
-                if (f.id && f.id.toLowerCase().includes(val.toLowerCase())) {
-                    foundStaffId = f.assignedTo;
+                if (f.id && f.id.toUpperCase() === val) {
+                    foundFile = f;
                 }
             });
 
@@ -1595,15 +1597,16 @@ app.get('/', (req, res) => {
             const alertText = document.getElementById('historyMatchText');
             const select = document.getElementById('formAssignee');
 
-            if (foundStaffId) {
-                const staff = USERS.find(u => u.id === foundStaffId);
+            if (foundFile) {
+                const staff = USERS.find(u => u.id === foundFile.assignedTo);
                 const foundStaffName = staff ? staff.name : "başka bir personele";
+                const foundDate = foundFile.createdAt || "tarih belirtilmemiş";
                 
                 if (alertText && alertBox) {
-                    alertText.innerText = \`Bu referans numarası daha önce "\${foundStaffName}" adlı personele verilmiştir!\`;
+                    alertText.innerHTML = \`Bu referans numarası daha önce <strong>\${foundStaffName}</strong> adlı personele <strong>\${foundDate}</strong> tarihinde verilmiştir!\`;
                     alertBox.classList.remove('hidden');
                 }
-                if (select) select.value = foundStaffId;
+                if (select) select.value = foundFile.assignedTo;
             } else {
                 if (alertBox) alertBox.classList.add('hidden');
             }
