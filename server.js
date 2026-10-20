@@ -4,11 +4,7 @@ const PORT = process.env.PORT || 10000;
 
 app.use(express.json());
 
-app.get('/', (req, res) => {
-    res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
-    res.setHeader('Pragma', 'no-cache');
-    res.setHeader('Expires', '0');
-    res.send(`<!DOCTYPE html>
+const htmlContent = `<!DOCTYPE html>
 <html lang="tr">
 <head>
     <meta charset="UTF-8">
@@ -811,7 +807,7 @@ app.get('/', (req, res) => {
         };
 
         const initialFiles = [
-            { id: "2026-101", category: "inceleme", incelemeReason: "Hane ziyareti güncel değil", description: "Hane incelemesi talebi değerlendirmesi.", assignedTo: 2, createdBy: 1, createdAt: "05.06.2026 10:15", deliveredConfirmed: false, status: "İncelemede" },
+            { id: "2026-101", category: "inceleme", incelemeReason: "Hane ziyareti güncel değil", description: "Hane incelemesi talebi değerlendirmesi.", assignedTo: 2, createdBy: 1, createdAt: "05.06.2026 10:15", deliveredConfirmed: false, status: "İşlemede" },
             { id: "2026-103", category: "sikayet", description: "Zeynep Arslan nakit yardım şikayet başvurusu.", assignedTo: 2, createdBy: 2, createdAt: "05.06.2026 14:00", deliveredConfirmed: true, status: "Tamamlandı" }
         ];
 
@@ -893,7 +889,7 @@ app.get('/', (req, res) => {
             const select = document.getElementById('userSelect');
             select.innerHTML = '<option value="">Lütfen Kullanıcı Seçiniz...</option>';
             USERS.forEach(u => {
-                select.innerHTML += `<option value="${u.id}">[ID: ${u.id}] ${u.name} (${u.role})</option>`;
+                select.innerHTML += '<option value="' + u.id + '">[ID: ' + u.id + '] ' + u.name + ' (' + u.role + ')</option>';
             });
         }
 
@@ -952,7 +948,7 @@ app.get('/', (req, res) => {
             document.getElementById('loginScreen').classList.add('hidden');
             document.getElementById('mainApp').classList.remove('hidden');
 
-            document.getElementById('currentUserName').innerText = `[ID: ${currentUser.id}]${currentUser.name}`;
+            document.getElementById('currentUserName').innerText = '[ID: ' + currentUser.id + '] ' + currentUser.name;
             document.getElementById('currentUserRole').innerText = currentUser.role;
 
             const adminTabBtn = document.getElementById('nav-tab-admin');
@@ -978,22 +974,20 @@ app.get('/', (req, res) => {
             renderAdminAllFiles();
             renderActivityLogs();
             switchTab(activeTab);
-            showToast(`Hoş geldiniz, ${currentUser.name}`, 'info');
+            showToast('Hoş geldiniz, ' + currentUser.name, 'info');
         }
 
         function showLatestAnnouncementPopup() {
             if (announcements.length === 0) return;
             const latest = announcements[0];
             const content = document.getElementById('announcementPopupContent');
-            content.innerHTML = `
-                <div class="bg-amber-50 p-4 rounded-xl border border-amber-200 space-y-2">
-                    <div class="flex items-center justify-between">
-                        <span class="font-bold text-red-700 text-sm">${latest.title}</span>
-                        <span class="text-[10px] text-slate-400">${latest.date}</span>
-                    </div>
-                    <p class="text-slate-800 leading-relaxed text-xs whitespace-pre-line">${latest.body}</p>
-                </div>
-            `;
+            content.innerHTML = '<div class="bg-amber-50 p-4 rounded-xl border border-amber-200 space-y-2">' +
+                '<div class="flex items-center justify-between">' +
+                '<span class="font-bold text-red-700 text-sm">' + latest.title + '</span>' +
+                '<span class="text-[10px] text-slate-400">' + latest.date + '</span>' +
+                '</div>' +
+                '<p class="text-slate-800 leading-relaxed text-xs whitespace-pre-line">' + latest.body + '</p>' +
+                '</div>';
             document.getElementById('announcementPopupModal').classList.remove('hidden');
         }
 
@@ -1002,18 +996,16 @@ app.get('/', (req, res) => {
             container.innerHTML = '';
 
             if (announcements.length === 0) {
-                container.innerHTML = `<p class="text-xs text-slate-400 text-center py-6">Sistemde kayıtlı duyuru bulunmamaktadır.</p>`;
+                container.innerHTML = '<p class="text-xs text-slate-400 text-center py-6">Sistemde kayıtlı duyuru bulunmamaktadır.</p>';
             } else {
                 announcements.forEach(a => {
-                    container.innerHTML += `
-                        <div class="p-4 bg-slate-50 border rounded-xl space-y-2 shadow-sm">
-                            <div class="flex items-center justify-between border-b pb-1.5">
-                                <span class="font-bold text-red-700 text-xs">${a.title}</span>
-                                <span class="text-[10px] text-slate-400">${a.date}</span>
-                            </div>
-                            <p class="text-slate-700 text-xs whitespace-pre-line">${a.body}</p>
-                        </div>
-                    `;
+                    container.innerHTML += '<div class="p-4 bg-slate-50 border rounded-xl space-y-2 shadow-sm">' +
+                        '<div class="flex items-center justify-between border-b pb-1.5">' +
+                        '<span class="font-bold text-red-700 text-xs">' + a.title + '</span>' +
+                        '<span class="text-[10px] text-slate-400">' + a.date + '</span>' +
+                        '</div>' +
+                        '<p class="text-slate-700 text-xs whitespace-pre-line">' + a.body + '</p>' +
+                        '</div>';
                 });
             }
             document.getElementById('announcementsListModal').classList.remove('hidden');
@@ -1042,7 +1034,7 @@ app.get('/', (req, res) => {
             const alertText = document.getElementById('staffActiveTaskText');
 
             if (totalActive > 0) {
-                alertText.innerHTML = `Dikkat! Üzerinizde sonuçlandırılmamış <strong>${totalActive} adet aktif görev/talimat</strong> bulunmaktadır.`;
+                alertText.innerHTML = 'Dikkat! Üzerinizde sonuçlandırılmamış <strong>' + totalActive + ' adet aktif görev/talimat</strong> bulunmaktadır.';
                 alertBox.classList.remove('hidden');
             } else {
                 alertBox.classList.add('hidden');
@@ -1093,14 +1085,12 @@ app.get('/', (req, res) => {
             unconfirmedList.forEach(item => {
                 const creator = USERS.find(u => u.id === item.createdBy)?.name || "Müdürlük / Süper Admin";
                 const isMudur = item.isMudur || item.id.includes('MUDUR');
-                tbody.innerHTML += `
-                    <tr class="hover:bg-slate-50">
-                        <td class="p-3 font-bold text-red-700">${item.id}</td>
-                        <td class="p-3 font-semibold text-slate-800">${item.description}</td>
-                        <td class="p-3 text-slate-600">${isMudur ? 'MÜDÜR TALİMATI' : item.category.toUpperCase()}</td>
-                        <td class="p-3 text-slate-600 font-medium">${creator}</td>
-                    </tr>
-                `;
+                tbody.innerHTML += '<tr class="hover:bg-slate-50">' +
+                    '<td class="p-3 font-bold text-red-700">' + item.id + '</td>' +
+                    '<td class="p-3 font-semibold text-slate-800">' + item.description + '</td>' +
+                    '<td class="p-3 text-slate-600">' + (isMudur ? 'MÜDÜR TALİMATI' : item.category.toUpperCase()) + '</td>' +
+                    '<td class="p-3 text-slate-600 font-medium">' + creator + '</td>' +
+                    '</tr>';
             });
 
             document.getElementById('rejectionSection').classList.add('hidden');
@@ -1160,7 +1150,7 @@ app.get('/', (req, res) => {
                     subject: item.description,
                     reason: reason
                 });
-                logActivity("Görev/Dosya Reddi", `Ref: ${item.id} nolu dosya/talimat reddedildi. Gerekçe: ${reason}`);
+                logActivity("Görev/Dosya Reddi", 'Ref: ' + item.id + ' nolu dosya/talimat reddedildi. Gerekçe: ' + reason);
             });
 
             saveState();
@@ -1172,10 +1162,7 @@ app.get('/', (req, res) => {
         function checkAdminRedNotifications() {
             if (currentUser && currentUser.isSuperAdmin && rejectionLogs.length > 0) {
                 const latest = rejectionLogs[0];
-                document.getElementById('adminRedBannerText').innerHTML = `
-                    <strong>${latest.staffName}</strong>, <span class="underline">${latest.fileId}</span> referanslı görevi/dosyayı teslim almayı reddetti. <br>
-                    <strong>Gerekçe:</strong> "${latest.reason}" (${latest.date})
-                `;
+                document.getElementById('adminRedBannerText').innerHTML = '<strong>' + latest.staffName + '</strong>, <span class="underline">' + latest.fileId + '</span> referanslı görevi/dosyayı teslim almayı reddetti. <br><strong>Gerekçe:</strong> "' + latest.reason + '" (' + latest.date + ')';
                 document.getElementById('adminRedBanner').classList.remove('hidden');
             } else {
                 document.getElementById('adminRedBanner').classList.add('hidden');
@@ -1249,7 +1236,7 @@ app.get('/', (req, res) => {
             document.getElementById('announcementTitle').value = '';
             document.getElementById('announcementBody').value = '';
             renderAdminAnnouncements();
-            logActivity("Duyuru Yayınlama", `Yeni duyuru yayınlandı: ${title}`);
+            logActivity("Duyuru Yayınlama", 'Yeni duyuru yayınlandı: ' + title);
             showToast("Duyuru başarıyla yayınlandı.", "success");
         }
 
@@ -1259,21 +1246,19 @@ app.get('/', (req, res) => {
             tbody.innerHTML = '';
 
             if (announcements.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="4" class="p-4 text-center text-slate-400">Yayınlanmış duyuru yok.</td></tr>`;
+                tbody.innerHTML = '<tr><td colspan="4" class="p-4 text-center text-slate-400">Yayınlanmış duyuru yok.</td></tr>';
                 return;
             }
 
             announcements.forEach((a) => {
-                tbody.innerHTML += `
-                    <tr class="hover:bg-slate-50">
-                        <td class="p-3 text-slate-500 font-semibold">${a.date}</td>
-                        <td class="p-3 font-bold text-red-700">${a.title}</td>
-                        <td class="p-3 text-slate-700">${a.body}</td>
-                        <td class="p-3 text-right">
-                            <button onclick="deleteAnnouncement(${a.id})" class="px-2.5 py-1 bg-red-600 text-white text-[10px] font-bold rounded shadow"><i class="fa-solid fa-trash"></i> Sil</button>
-                        </td>
-                    </tr>
-                `;
+                tbody.innerHTML += '<tr class="hover:bg-slate-50">' +
+                    '<td class="p-3 text-slate-500 font-semibold">' + a.date + '</td>' +
+                    '<td class="p-3 font-bold text-red-700">' + a.title + '</td>' +
+                    '<td class="p-3 text-slate-700">' + a.body + '</td>' +
+                    '<td class="p-3 text-right">' +
+                    '<button onclick="deleteAnnouncement(' + a.id + ')" class="px-2.5 py-1 bg-red-600 text-white text-[10px] font-bold rounded shadow"><i class="fa-solid fa-trash"></i> Sil</button>' +
+                    '</td>' +
+                    '</tr>';
             });
         }
 
@@ -1283,7 +1268,7 @@ app.get('/', (req, res) => {
                 announcements = announcements.filter(a => a.id !== id);
                 saveState();
                 renderAdminAnnouncements();
-                logActivity("Duyuru Silme", `Duyuru silindi ID: ${id}`);
+                logActivity("Duyuru Silme", 'Duyuru silindi ID: ' + id);
                 showToast("Duyuru silindi.", "warning");
             }
         }
@@ -1296,11 +1281,11 @@ app.get('/', (req, res) => {
             const filteredFiles = files.filter(f => f.category === category && f.status !== 'Tamamlandı');
 
             if (category === 'inceleme') {
-                document.getElementById('incelemeCount').innerText = `${filteredFiles.length} Aktif Dosya`;
+                document.getElementById('incelemeCount').innerText = filteredFiles.length + ' Aktif Dosya';
             }
 
             if (filteredFiles.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="6" class="p-4 text-center text-slate-400">Dosya bulunmamaktadır.</td></tr>`;
+                tbody.innerHTML = '<tr><td colspan="6" class="p-4 text-center text-slate-400">Dosya bulunmamaktadır.</td></tr>';
                 return;
             }
 
@@ -1310,29 +1295,27 @@ app.get('/', (req, res) => {
 
                 let displayDesc = f.description;
                 if (category === 'inceleme' && f.incelemeReason) {
-                    displayDesc = `<strong class="text-red-700">[${f.incelemeReason}]</strong>${f.description}`;
+                    displayDesc = '<strong class="text-red-700">[' + f.incelemeReason + ']</strong> ' + f.description;
                 }
 
-                let statusBadge = `<span class="bg-slate-100 text-slate-700 text-[10px] font-bold px-2 py-0.5 rounded-full">İşlemde</span>`;
+                let statusBadge = '<span class="bg-slate-100 text-slate-700 text-[10px] font-bold px-2 py-0.5 rounded-full">İşlemde</span>';
 
                 const canTransfer = (currentUser.isSuperAdmin || (PERMISSIONS[currentUser.id]?.can_transfer && f.assignedTo === currentUser.id));
                 const canComplete = (currentUser.isSuperAdmin || (f.assignedTo === currentUser.id));
 
-                tbody.innerHTML += `
-                    <tr class="hover:bg-slate-50">
-                        <td class="p-3 font-bold text-red-700">${f.id}</td>
-                        <td class="p-3 text-slate-600 font-medium">${displayDesc}</td>
-                        <td class="p-3 text-slate-600"><i class="fa-solid fa-user-pen text-slate-400 mr-1"></i>${creatorStaff}</td>
-                        <td class="p-3 font-medium text-slate-700">${assignedStaff}</td>
-                        <td class="p-3">${statusBadge}</td>
-                        <td class="p-3 text-right space-x-1">
-                            <button onclick="openFileDetailModal('${f.id}')" class="px-2.5 py-1 bg-slate-700 hover:bg-slate-800 text-white text-[11px] font-semibold rounded-lg" title="Detay"><i class="fa-solid fa-eye"></i></button>
-                            ${canTransfer ? `<button onclick="openTransferModal('${f.id}')" class="px-2.5 py-1 bg-amber-500 hover:bg-amber-600 text-white text-[11px] font-semibold rounded-lg">Havale</button>` : ''}
-                            ${canComplete ? `<button onclick="openCompleteModal('${f.id}')" class="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white text-[11px] font-semibold rounded-lg">Onayla</button>` : ''}
-                            ${currentUser.isSuperAdmin ? `<button onclick="deleteFile('${f.id}')" class="px-2 py-1 bg-red-100 text-red-700 text-[11px] font-semibold rounded-lg"><i class="fa-solid fa-trash"></i></button>` : ''}
-                        </td>
-                    </tr>
-                `;
+                tbody.innerHTML += '<tr class="hover:bg-slate-50">' +
+                    '<td class="p-3 font-bold text-red-700">' + f.id + '</td>' +
+                    '<td class="p-3 text-slate-600 font-medium">' + displayDesc + '</td>' +
+                    '<td class="p-3 text-slate-600"><i class="fa-solid fa-user-pen text-slate-400 mr-1"></i>' + creatorStaff + '</td>' +
+                    '<td class="p-3 font-medium text-slate-700">' + assignedStaff + '</td>' +
+                    '<td class="p-3">' + statusBadge + '</td>' +
+                    '<td class="p-3 text-right space-x-1">' +
+                    '<button onclick="openFileDetailModal(\'' + f.id + '\')" class="px-2.5 py-1 bg-slate-700 hover:bg-slate-800 text-white text-[11px] font-semibold rounded-lg" title="Detay"><i class="fa-solid fa-eye"></i></button>' +
+                    (canTransfer ? '<button onclick="openTransferModal(\'' + f.id + '\')" class="px-2.5 py-1 bg-amber-500 hover:bg-amber-600 text-white text-[11px] font-semibold rounded-lg">Havale</button>' : '') +
+                    (canComplete ? '<button onclick="openCompleteModal(\'' + f.id + '\')" class="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white text-[11px] font-semibold rounded-lg">Onayla</button>' : '') +
+                    (currentUser.isSuperAdmin ? '<button onclick="deleteFile(\'' + f.id + '\')" class="px-2 py-1 bg-red-100 text-red-700 text-[11px] font-semibold rounded-lg"><i class="fa-solid fa-trash"></i></button>' : '') +
+                    '</td>' +
+                    '</tr>';
             });
         }
 
@@ -1344,7 +1327,7 @@ app.get('/', (req, res) => {
             const activeMudur = mudurFiles.filter(m => m.status !== 'Tamamlandı');
 
             if (activeMudur.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="6" class="p-4 text-center text-slate-400">Aktif müdür talimatı bulunmamaktadır.</td></tr>`;
+                tbody.innerHTML = '<tr><td colspan="6" class="p-4 text-center text-slate-400">Aktif müdür talimatı bulunmamaktadır.</td></tr>';
                 return;
             }
 
@@ -1353,19 +1336,17 @@ app.get('/', (req, res) => {
                 const assigned = USERS.find(u => u.id === m.assignedTo)?.name || "Atanmadı";
                 const canComplete = (currentUser.isSuperAdmin || m.assignedTo === currentUser.id);
 
-                tbody.innerHTML += `
-                    <tr class="hover:bg-slate-50">
-                        <td class="p-3 font-bold text-red-700">${m.id}</td>
-                        <td class="p-3 text-slate-800 font-medium">${m.description}</td>
-                        <td class="p-3 text-slate-600"><i class="fa-solid fa-user-tie text-red-700 mr-1"></i>${creator}</td>
-                        <td class="p-3 font-medium text-slate-700">${assigned}</td>
-                        <td class="p-3"><span class="bg-amber-100 text-amber-800 text-[10px] font-bold px-2 py-0.5 rounded-full">Talimat Bekliyor</span></td>
-                        <td class="p-3 text-right space-x-1">
-                            ${canComplete ? `<button onclick="openMudurCompleteModal('${m.id}')" class="px-3 py-1 bg-emerald-600 hover:bg-emerald-700 text-white text-[11px] font-bold rounded-lg shadow">Okudum & Açıklama Gir</button>` : ''}
-                            ${currentUser.isSuperAdmin ? `<button onclick="deleteMudurFile('${m.id}')" class="px-2 py-1 bg-red-100 text-red-700 text-[11px] font-semibold rounded-lg"><i class="fa-solid fa-trash"></i></button>` : ''}
-                        </td>
-                    </tr>
-                `;
+                tbody.innerHTML += '<tr class="hover:bg-slate-50">' +
+                    '<td class="p-3 font-bold text-red-700">' + m.id + '</td>' +
+                    '<td class="p-3 text-slate-800 font-medium">' + m.description + '</td>' +
+                    '<td class="p-3 text-slate-600"><i class="fa-solid fa-user-tie text-red-700 mr-1"></i>' + creator + '</td>' +
+                    '<td class="p-3 font-medium text-slate-700">' + assigned + '</td>' +
+                    '<td class="p-3"><span class="bg-amber-100 text-amber-800 text-[10px] font-bold px-2 py-0.5 rounded-full">Talimat Bekliyor</span></td>' +
+                    '<td class="p-3 text-right space-x-1">' +
+                    (canComplete ? '<button onclick="openMudurCompleteModal(\'' + m.id + '\')" class="px-3 py-1 bg-emerald-600 hover:bg-emerald-700 text-white text-[11px] font-bold rounded-lg shadow">Okudum & Açıklama Gir</button>' : '') +
+                    (currentUser.isSuperAdmin ? '<button onclick="deleteMudurFile(\'' + m.id + '\')" class="px-2 py-1 bg-red-100 text-red-700 text-[11px] font-semibold rounded-lg"><i class="fa-solid fa-trash"></i></button>' : '') +
+                    '</td>' +
+                    '</tr>';
             });
         }
 
@@ -1377,18 +1358,17 @@ app.get('/', (req, res) => {
             const assignee = USERS.find(u => u.id === f.assignedTo);
 
             const content = document.getElementById('fileDetailModalContent');
-            content.innerHTML = `
-                <div class="space-y-2 bg-slate-50 p-4 rounded-xl border">
-                    <div class="flex justify-between border-b pb-2"><strong class="text-slate-500">Referans Numarası:</strong> <span class="font-bold text-red-700">${f.id}</span></div>
-                    <div class="flex justify-between border-b pb-2"><strong class="text-slate-500">Dosya Kategorisi:</strong> <span class="uppercase font-bold">${f.category}</span></div>${f.incelemeReason ? `<div class="flex justify-between border-b pb-2"><strong class="text-slate-500">İnceleme Gerekçesi:</strong> <span class="font-bold text-red-700">${f.incelemeReason}</span></div>` : ''}
-                    <div class="flex justify-between border-b pb-2"><strong class="text-slate-500">Ekleyen Personel:</strong> <span class="font-bold text-slate-800">${creator ? creator.name + ' (ID: ' + creator.id + ')' : 'Sistem'}</span></div>
-                    <div class="flex justify-between border-b pb-2"><strong class="text-slate-500">Eklenme Tarihi / Saati:</strong> <span class="semibold">${f.createdAt}</span></div>
-                    <div class="flex justify-between border-b pb-2"><strong class="text-slate-500">Atanan Sorumlu Personel:</strong> <span class="font-bold text-slate-800">${assignee ? assignee.name + ' (ID: ' + assignee.id + ')' : 'Atanmadı'}</span></div>
-                    <div class="flex justify-between border-b pb-2"><strong class="text-slate-500">Teslim Onay Durumu:</strong> <span>${f.deliveredConfirmed ? '✔️ Teslim Alındı' : '⏳ Onay Bekliyor'}</span></div>
-                    <div class="flex justify-between border-b pb-2"><strong class="text-slate-500">Son Durum:</strong> <span class="font-bold">${f.status}</span></div>
-                    <div><strong class="text-slate-500 block mb-1">Konu / Açıklama / Detay:</strong> <p class="bg-white p-2.5 rounded border text-slate-800">${f.description}</p></div>
-                </div>
-            `;
+            content.innerHTML = '<div class="space-y-2 bg-slate-50 p-4 rounded-xl border">' +
+                '<div class="flex justify-between border-b pb-2"><strong class="text-slate-500">Referans Numarası:</strong> <span class="font-bold text-red-700">' + f.id + '</span></div>' +
+                '<div class="flex justify-between border-b pb-2"><strong class="text-slate-500">Dosya Kategorisi:</strong> <span class="uppercase font-bold">' + f.category + '</span></div>' +
+                (f.incelemeReason ? '<div class="flex justify-between border-b pb-2"><strong class="text-slate-500">İnceleme Gerekçesi:</strong> <span class="font-bold text-red-700">' + f.incelemeReason + '</span></div>' : '') +
+                '<div class="flex justify-between border-b pb-2"><strong class="text-slate-500">Ekleyen Personel:</strong> <span class="font-bold text-slate-800">' + (creator ? creator.name + ' (ID: ' + creator.id + ')' : 'Sistem') + '</span></div>' +
+                '<div class="flex justify-between border-b pb-2"><strong class="text-slate-500">Eklenme Tarihi / Saati:</strong> <span class="semibold">' + f.createdAt + '</span></div>' +
+                '<div class="flex justify-between border-b pb-2"><strong class="text-slate-500">Atanan Sorumlu Personel:</strong> <span class="font-bold text-slate-800">' + (assignee ? assignee.name + ' (ID: ' + assignee.id + ')' : 'Atanmadı') + '</span></div>' +
+                '<div class="flex justify-between border-b pb-2"><strong class="text-slate-500">Teslim Onay Durumu:</strong> <span>' + (f.deliveredConfirmed ? '✔️ Teslim Alındı' : '⏳ Onay Bekliyor') + '</span></div>' +
+                '<div class="flex justify-between border-b pb-2"><strong class="text-slate-500">Son Durum:</strong> <span class="font-bold">' + f.status + '</span></div>' +
+                '<div><strong class="text-slate-500 block mb-1">Konu / Açıklama / Detay:</strong> <p class="bg-white p-2.5 rounded border text-slate-800">' + f.description + '</p></div>' +
+                '</div>';
             document.getElementById('fileDetailModal').classList.remove('hidden');
         }
 
@@ -1400,54 +1380,50 @@ app.get('/', (req, res) => {
             USERS.filter(u => !u.isSuperAdmin).forEach(staff => {
                 const staffFiles = files.filter(f => f.assignedTo === staff.id);
                 
-                container.innerHTML += `
-                    <div class="bg-white border rounded-2xl p-4 shadow-sm flex flex-col justify-between hover:shadow-md transition">
-                        <div>
-                            <div class="flex items-center justify-between mb-3 border-b pb-2">
-                                <h4 class="font-bold text-xs text-slate-800">${staff.name} <span class="text-[10px] text-slate-400 font-normal">(ID: ${staff.id})</span></h4>
-                                <span class="bg-red-100 text-red-800 text-[10px] font-bold px-2.5 py-0.5 rounded-full">${staffFiles.length} Dosya Arşivi</span>
-                            </div>
-                            <p class="text-[11px] text-slate-500 mb-3">Personelin üzerine kayıtlı tüm 3 yıllık dosya geçmişi.</p>
-                        </div>
-                        <button onclick="openStaffArchiveModal(${staff.id}, '${staff.name}')" class="w-full py-2 bg-slate-100 hover:bg-red-700 hover:text-white text-slate-700 font-bold text-xs rounded-xl transition flex items-center justify-center space-x-2">
-                            <i class="fa-solid fa-folder-open"></i>
-                            <span>Arşiv Dosyalarını Görüntüle</span>
-                        </button>
-                    </div>
-                `;
+                container.innerHTML += '<div class="bg-white border rounded-2xl p-4 shadow-sm flex flex-col justify-between hover:shadow-md transition">' +
+                    '<div>' +
+                    '<div class="flex items-center justify-between mb-3 border-b pb-2">' +
+                    '<h4 class="font-bold text-xs text-slate-800">' + staff.name + ' <span class="text-[10px] text-slate-400 font-normal">(ID: ' + staff.id + ')</span></h4>' +
+                    '<span class="bg-red-100 text-red-800 text-[10px] font-bold px-2.5 py-0.5 rounded-full">' + staffFiles.length + ' Dosya Arşivi</span>' +
+                    '</div>' +
+                    '<p class="text-[11px] text-slate-500 mb-3">Personelin üzerine kayıtlı tüm 3 yıllık dosya geçmişi.</p>' +
+                    '</div>' +
+                    '<button onclick="openStaffArchiveModal(' + staff.id + ', \'' + staff.name + '\')" class="w-full py-2 bg-slate-100 hover:bg-red-700 hover:text-white text-slate-700 font-bold text-xs rounded-xl transition flex items-center justify-center space-x-2">' +
+                    '<i class="fa-solid fa-folder-open"></i>' +
+                    '<span>Arşiv Dosyalarını Görüntüle</span>' +
+                    '</button>' +
+                    '</div>';
             });
         }
 
         function openStaffArchiveModal(staffId, staffName) {
-            document.getElementById('archiveModalTitle').innerHTML = `<i class="fa-solid fa-folder-open"></i><span>${staffName} - 3 Yıllık Dosya Arşivi</span>`;
+            document.getElementById('archiveModalTitle').innerHTML = '<i class="fa-solid fa-folder-open"></i><span>' + staffName + ' - 3 Yıllık Dosya Arşivi</span>';
             const contentContainer = document.getElementById('staffArchiveContent');
             contentContainer.innerHTML = '';
 
             const staffFiles = files.filter(f => f.assignedTo === staffId);
 
             if (staffFiles.length === 0) {
-                contentContainer.innerHTML = `<p class="text-xs text-slate-400 text-center py-6">Bu personele ait kayıtlı dosya bulunmamaktadır.</p>`;
+                contentContainer.innerHTML = '<p class="text-xs text-slate-400 text-center py-6">Bu personele ait kayıtlı dosya bulunmamaktadır.</p>';
             } else {
                 staffFiles.forEach(sf => {
                     let statusText = sf.status === 'Tamamlandı' 
                         ? '<span class="bg-blue-100 text-blue-800 text-[10px] font-bold px-2 py-0.5 rounded-full">Tamamlandı</span>' 
                         : '<span class="bg-amber-100 text-amber-800 text-[10px] font-bold px-2 py-0.5 rounded-full">Aktif / İşlemde</span>';
                     
-                    contentContainer.innerHTML += `
-                        <div class="p-3.5 bg-slate-50 border rounded-xl text-xs flex items-center justify-between gap-3 shadow-sm">
-                            <div>
-                                <div class="flex items-center space-x-2">
-                                    <span class="font-bold text-red-700">Ref: ${sf.id}</span>
-                                    <span class="text-[10px] uppercase font-bold text-slate-400 bg-white px-2 py-0.5 border rounded">${sf.category}</span>
-                                </div>
-                                <div class="text-slate-700 font-medium mt-1">${sf.description}</div>
-                            </div>
-                            <div class="text-right flex flex-col items-end gap-1.5 shrink-0">
-                                ${statusText}
-                                <span class="text-[10px] text-slate-400">Ekleyen ID: ${sf.createdBy}</span>
-                            </div>
-                        </div>
-                    `;
+                    contentContainer.innerHTML += '<div class="p-3.5 bg-slate-50 border rounded-xl text-xs flex items-center justify-between gap-3 shadow-sm">' +
+                        '<div>' +
+                        '<div class="flex items-center space-x-2">' +
+                        '<span class="font-bold text-red-700">Ref: ' + sf.id + '</span>' +
+                        '<span class="text-[10px] uppercase font-bold text-slate-400 bg-white px-2 py-0.5 border rounded">' + sf.category + '</span>' +
+                        '</div>' +
+                        '<div class="text-slate-700 font-medium mt-1">' + sf.description + '</div>' +
+                        '</div>' +
+                        '<div class="text-right flex flex-col items-end gap-1.5 shrink-0">' +
+                        statusText +
+                        '<span class="text-[10px] text-slate-400">Ekleyen ID: ' + sf.createdBy + '</span>' +
+                        '</div>' +
+                        '</div>';
                 });
             }
 
@@ -1461,7 +1437,7 @@ app.get('/', (req, res) => {
 
             const allCombined = [...files, ...mudurFiles];
             if (allCombined.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="6" class="p-4 text-center text-slate-400">Sistemde hiç dosya yok.</td></tr>`;
+                tbody.innerHTML = '<tr><td colspan="6" class="p-4 text-center text-slate-400">Sistemde hiç dosya yok.</td></tr>';
                 return;
             }
 
@@ -1469,21 +1445,19 @@ app.get('/', (req, res) => {
                 const creator = USERS.find(u => u.id === f.createdBy)?.name || "Sistem";
                 const staffName = USERS.find(u => u.id === f.assignedTo)?.name || "Atanmadı";
                 let statusBadge = f.status === 'Tamamlandı'
-                    ? `<span class="bg-blue-100 text-blue-800 text-[10px] font-bold px-2 py-0.5 rounded-full">Tamamlandı</span>`
-                    : `<span class="bg-slate-100 text-slate-700 text-[10px] font-bold px-2 py-0.5 rounded-full">İşlemde</span>`;
+                    ? '<span class="bg-blue-100 text-blue-800 text-[10px] font-bold px-2 py-0.5 rounded-full">Tamamlandı</span>'
+                    : '<span class="bg-slate-100 text-slate-700 text-[10px] font-bold px-2 py-0.5 rounded-full">İşlemde</span>';
 
-                tbody.innerHTML += `
-                    <tr class="hover:bg-slate-50">
-                        <td class="p-3 font-bold text-red-700">${f.id}</td>
-                        <td class="p-3 uppercase text-[10px] font-bold text-slate-500">${f.category || 'MÜDÜR'}</td>
-                        <td class="p-3 text-slate-600">${creator}</td>
-                        <td class="p-3 font-medium">${staffName}</td>
-                        <td class="p-3">${statusBadge}</td>
-                        <td class="p-3 text-right space-x-1">
-                            <button onclick="deleteFileCompletely('${f.id}')" class="px-2.5 py-1 bg-red-600 text-white text-[11px] font-bold rounded-lg shadow"><i class="fa-solid fa-trash"></i></button>
-                        </td>
-                    </tr>
-                `;
+                tbody.innerHTML += '<tr class="hover:bg-slate-50">' +
+                    '<td class="p-3 font-bold text-red-700">' + f.id + '</td>' +
+                    '<td class="p-3 uppercase text-[10px] font-bold text-slate-500">' + (f.category || 'MÜDÜR') + '</td>' +
+                    '<td class="p-3 text-slate-600">' + creator + '</td>' +
+                    '<td class="p-3 font-medium">' + staffName + '</td>' +
+                    '<td class="p-3">' + statusBadge + '</td>' +
+                    '<td class="p-3 text-right space-x-1">' +
+                    '<button onclick="deleteFileCompletely(\'' + f.id + '\')" class="px-2.5 py-1 bg-red-600 text-white text-[11px] font-bold rounded-lg shadow"><i class="fa-solid fa-trash"></i></button>' +
+                    '</td>' +
+                    '</tr>';
             });
         }
 
@@ -1504,19 +1478,17 @@ app.get('/', (req, res) => {
             tbody.innerHTML = '';
 
             if (activityLogs.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="4" class="p-4 text-center text-slate-400">Henüz kaydedilmiş işlem logu bulunmamaktadır.</td></tr>`;
+                tbody.innerHTML = '<tr><td colspan="4" class="p-4 text-center text-slate-400">Henüz kaydedilmiş işlem logu bulunmamaktadır.</td></tr>';
                 return;
             }
 
             activityLogs.forEach(log => {
-                tbody.innerHTML += `
-                    <tr class="hover:bg-slate-50">
-                        <td class="p-3 font-semibold text-slate-500">${log.time}</td>
-                        <td class="p-3 font-bold text-slate-800">${log.userName} <span class="text-[10px] text-blue-600 font-mono">[ID: ${log.userId}]</span></td>
-                        <td class="p-3"><span class="bg-red-50 text-red-800 border border-red-200 text-[10px] font-bold px-2 py-0.5 rounded">${log.type}</span></td>
-                        <td class="p-3 text-slate-700">${log.detail}</td>
-                    </tr>
-                `;
+                tbody.innerHTML += '<tr class="hover:bg-slate-50">' +
+                    '<td class="p-3 font-semibold text-slate-500">' + log.time + '</td>' +
+                    '<td class="p-3 font-bold text-slate-800">' + log.userName + ' <span class="text-[10px] text-blue-600 font-mono">[ID: ' + log.userId + ']</span></td>' +
+                    '<td class="p-3"><span class="bg-red-50 text-red-800 border border-red-200 text-[10px] font-bold px-2 py-0.5 rounded">' + log.type + '</span></td>' +
+                    '<td class="p-3 text-slate-700">' + log.detail + '</td>' +
+                    '</tr>';
             });
         }
 
@@ -1535,22 +1507,20 @@ app.get('/', (req, res) => {
             if (!tbody) return;
             tbody.innerHTML = '';
             if (rejectionLogs.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="6" class="p-4 text-center text-slate-400">Henüz dosya reddi bulunmamaktadır.</td></tr>`;
+                tbody.innerHTML = '<tr><td colspan="6" class="p-4 text-center text-slate-400">Henüz dosya reddi bulunmamaktadır.</td></tr>';
                 return;
             }
             rejectionLogs.forEach((log, index) => {
-                tbody.innerHTML += `
-                    <tr class="hover:bg-slate-50">
-                        <td class="p-3">${log.date}</td>
-                        <td class="p-3 font-bold">${log.staffName}</td>
-                        <td class="p-3 text-red-700 font-bold">${log.fileId}</td>
-                        <td class="p-3">${log.subject}</td>
-                        <td class="p-3 text-red-800 font-semibold bg-red-50">${log.reason}</td>
-                        <td class="p-3 text-right space-x-1">
-                            <button onclick="adminActionDelete('${log.fileId}',${index})" class="px-2 py-1 bg-red-600 text-white text-[10px] font-semibold rounded shadow">Sil</button>
-                        </td>
-                    </tr>
-                `;
+                tbody.innerHTML += '<tr class="hover:bg-slate-50">' +
+                    '<td class="p-3">' + log.date + '</td>' +
+                    '<td class="p-3 font-bold">' + log.staffName + '</td>' +
+                    '<td class="p-3 text-red-700 font-bold">' + log.fileId + '</td>' +
+                    '<td class="p-3">' + log.subject + '</td>' +
+                    '<td class="p-3 text-red-800 font-semibold bg-red-50">' + log.reason + '</td>' +
+                    '<td class="p-3 text-right space-x-1">' +
+                    '<button onclick="adminActionDelete(\'' + log.fileId + '\', ' + index + ')" class="px-2 py-1 bg-red-600 text-white text-[10px] font-semibold rounded shadow">Sil</button>' +
+                    '</td>' +
+                    '</tr>';
             });
         }
 
@@ -1584,7 +1554,7 @@ app.get('/', (req, res) => {
             renderKimdeMatrixModalCards();
             document.getElementById('newStaffName').value = '';
             document.getElementById('newStaffRole').value = '';
-            logActivity("Personel Tanımlama", `Yeni personel eklendi: ${name} [ID:${newId}] (Şifre: 123456)`);
+            logActivity("Personel Tanımlama", 'Yeni personel eklendi: ' + name + ' [ID: ' + newId + '] (Şifre: 123456)');
             showToast("Yeni personel eklendi (Şifresi: 123456).", "success");
         }
 
@@ -1593,12 +1563,12 @@ app.get('/', (req, res) => {
             const staff = USERS.find(u => u.id === staffId);
             if (!staff) return;
 
-            if (confirm(`"${staff.name}" adlı personelin şifresini 123456 olarak sıfırlamak istediğinize emin misiniz?`)) {
+            if (confirm('"' + staff.name + '" adlı personelin şifresini 123456 olarak sıfırlamak istediğinize emin misiniz?')) {
                 staff.pass = "123456";
                 saveState();
                 renderPermissionsMatrix();
-                logActivity("Şifre Sıfırlama", `Personel şifresi sıfırlandı: ${staff.name}`);
-                showToast(`${staff.name} adlı personelin şifresi sıfırlandı.`, "warning");
+                logActivity("Şifre Sıfırlama", 'Personel şifresi sıfırlandı: ' + staff.name);
+                showToast(staff.name + ' adlı personelin şifresi sıfırlandı.', "warning");
             }
         }
 
@@ -1611,7 +1581,7 @@ app.get('/', (req, res) => {
                 initUserDropdown();
                 renderPermissionsMatrix();
                 renderKimdeMatrixModalCards();
-                logActivity("Personel Silme", `Personel silindi ID: ${staffId}`);
+                logActivity("Personel Silme", 'Personel silindi ID: ' + staffId);
                 showToast("Personel silindi.", "warning");
             }
         }
@@ -1623,25 +1593,23 @@ app.get('/', (req, res) => {
 
             USERS.filter(u => !u.isSuperAdmin).forEach(staff => {
                 const p = PERMISSIONS[staff.id] || {};
-                container.innerHTML += `
-                    <div class="p-4 bg-slate-50 border rounded-2xl flex flex-wrap items-center justify-between gap-4">
-                        <div>
-                            <h5 class="font-bold text-xs">${staff.name} <span class="text-[11px] text-blue-600 font-mono">[ID: ${staff.id}]</span></h5>
-                            <p class="text-[10px] text-slate-500">${staff.role}</p>
-                        </div>
-                        <div class="flex flex-wrap items-center gap-2 text-xs">
-                            <button onclick="resetStaffPassword(${staff.id})" class="bg-amber-600 hover:bg-amber-700 text-white text-[10px] px-2.5 py-1.5 rounded-lg font-bold shadow flex items-center space-x-1 mr-2">
-                                <i class="fa-solid fa-rotate-right"></i><span>Şifreyi Sıfırla (123456)</span>
-                            </button>
-                            <label class="bg-white p-1.5 border rounded cursor-pointer"><input type="checkbox" ${p.add_inceleme ? 'checked' : ''} onchange="togglePermission(${staff.id}, 'add_inceleme')"> İnceleme</label>
-                            <label class="bg-white p-1.5 border rounded cursor-pointer"><input type="checkbox" ${p.add_sikayet ? 'checked' : ''} onchange="togglePermission(${staff.id}, 'add_sikayet')"> Şikayet</label>
-                            <label class="bg-white p-1.5 border rounded cursor-pointer"><input type="checkbox" ${p.add_hastane ? 'checked' : ''} onchange="togglePermission(${staff.id}, 'add_hastane')"> Hastane</label>
-                            <label class="bg-white p-1.5 border rounded cursor-pointer"><input type="checkbox" ${p.add_toplanti ? 'checked' : ''} onchange="togglePermission(${staff.id}, 'add_toplanti')"> Toplantı</label>
-                            <label class="bg-amber-50 p-1.5 border border-amber-300 rounded cursor-pointer font-bold"><input type="checkbox" ${p.can_transfer ? 'checked' : ''} onchange="togglePermission(${staff.id}, 'can_transfer')"> Havale</label>
-                            <button onclick="deleteStaff(${staff.id})" class="bg-red-600 text-white text-[10px] px-2 py-1 rounded font-bold ml-2">Sil</button>
-                        </div>
-                    </div>
-                `;
+                container.innerHTML += '<div class="p-4 bg-slate-50 border rounded-2xl flex flex-wrap items-center justify-between gap-4">' +
+                    '<div>' +
+                    '<h5 class="font-bold text-xs">' + staff.name + ' <span class="text-[11px] text-blue-600 font-mono">[ID: ' + staff.id + ']</span></h5>' +
+                    '<p class="text-[10px] text-slate-500">' + staff.role + '</p>' +
+                    '</div>' +
+                    '<div class="flex flex-wrap items-center gap-2 text-xs">' +
+                    '<button onclick="resetStaffPassword(' + staff.id + ')" class="bg-amber-600 hover:bg-amber-700 text-white text-[10px] px-2.5 py-1.5 rounded-lg font-bold shadow flex items-center space-x-1 mr-2">' +
+                    '<i class="fa-solid fa-rotate-right"></i><span>Şifreyi Sıfırla (123456)</span>' +
+                    '</button>' +
+                    '<label class="bg-white p-1.5 border rounded cursor-pointer"><input type="checkbox" ' + (p.add_inceleme ? 'checked' : '') + ' onchange="togglePermission(' + staff.id + ', \'add_inceleme\')"> İnceleme</label>' +
+                    '<label class="bg-white p-1.5 border rounded cursor-pointer"><input type="checkbox" ' + (p.add_sikayet ? 'checked' : '') + ' onchange="togglePermission(' + staff.id + ', \'add_sikayet\')"> Şikayet</label>' +
+                    '<label class="bg-white p-1.5 border rounded cursor-pointer"><input type="checkbox" ' + (p.add_hastane ? 'checked' : '') + ' onchange="togglePermission(' + staff.id + ', \'add_hastane\')"> Hastane</label>' +
+                    '<label class="bg-white p-1.5 border rounded cursor-pointer"><input type="checkbox" ' + (p.add_toplanti ? 'checked' : '') + ' onchange="togglePermission(' + staff.id + ', \'add_toplanti\')"> Toplantı</label>' +
+                    '<label class="bg-amber-50 p-1.5 border border-amber-300 rounded cursor-pointer font-bold"><input type="checkbox" ' + (p.can_transfer ? 'checked' : '') + ' onchange="togglePermission(' + staff.id + ', \'can_transfer\')"> Havale</label>' +
+                    '<button onclick="deleteStaff(' + staff.id + ')" class="bg-red-600 text-white text-[10px] px-2 py-1 rounded font-bold ml-2">Sil</button>' +
+                    '</div>' +
+                    '</div>';
             });
         }
 
@@ -1649,7 +1617,7 @@ app.get('/', (req, res) => {
             if (!PERMISSIONS[staffId]) PERMISSIONS[staffId] = {};
             PERMISSIONS[staffId][key] = !PERMISSIONS[staffId][key];
             saveState();
-            logActivity("Yetki Güncelleme", `Personel ID: ${staffId} yetkisi değiştirildi.`);
+            logActivity("Yetki Güncelleme", 'Personel ID: ' + staffId + ' yetkisi değiştirildi.');
             updateAddButtonVisibility();
             showToast("Yetki güncellendi.", "success");
         }
@@ -1658,7 +1626,7 @@ app.get('/', (req, res) => {
             const select = document.getElementById('formAssignee');
             select.innerHTML = '';
             USERS.filter(u => !u.isSuperAdmin).forEach(u => {
-                select.innerHTML += `<option value="${u.id}">[ID: ${u.id}] ${u.name} (${u.role})</option>`;
+                select.innerHTML += '<option value="' + u.id + '">[ID: ' + u.id + '] ' + u.name + ' (' + u.role + ')</option>';
             });
 
             const catSelect = document.getElementById('formCategory');
@@ -1688,7 +1656,7 @@ app.get('/', (req, res) => {
             const select = document.getElementById('mudurAssignee');
             select.innerHTML = '';
             USERS.filter(u => !u.isSuperAdmin).forEach(u => {
-                select.innerHTML += `<option value="${u.id}">[ID: ${u.id}] ${u.name} (${u.role})</option>`;
+                select.innerHTML += '<option value="' + u.id + '">[ID: ' + u.id + '] ' + u.name + ' (' + u.role + ')</option>';
             });
             document.getElementById('mudurRefNo').value = '';
             document.getElementById('mudurDescription').value = '';
@@ -1716,7 +1684,7 @@ app.get('/', (req, res) => {
             saveState();
             renderAllTables();
             closeModal('mudurModal');
-            logActivity("Müdür Talimatı", `Ref: ${refNo} nolu müdür talimatı yayınlandı.`);
+            logActivity("Müdür Talimatı", 'Ref: ' + refNo + ' nolu müdür talimatı yayınlandı.');
             showToast("Müdür talimatı ilgili personele gönderildi.", "success");
         }
 
@@ -1746,7 +1714,7 @@ app.get('/', (req, res) => {
                 const foundDate = foundFile.createdAt || "tarih belirtilmemiş";
                 
                 if (alertText && alertBox) {
-                    alertText.innerHTML = `Bu referans numarası daha önce <strong>${foundStaffName}</strong> adlı personele <strong>${foundDate}</strong> tarihinde verilmiştir!`;
+                    alertText.innerHTML = 'Bu referans numarası daha önce <strong>' + foundStaffName + '</strong> adlı personele <strong>' + foundDate + '</strong> tarihinde verilmiştir!';
                     alertBox.classList.remove('hidden');
                 }
                 if (select) select.value = foundFile.assignedTo;
@@ -1781,8 +1749,8 @@ app.get('/', (req, res) => {
             saveState();
             renderAllTables();
             closeModal('newFileModal');
-            logActivity("Dosya Oluşturma", `Ref: ${refNo} (${category.toUpperCase()}) eklendi.`);
-            showToast(`${refNo} referanslı yeni dosya oluşturuldu.`, 'success');
+            logActivity("Dosya Oluşturma", 'Ref: ' + refNo + ' (' + category.toUpperCase() + ') eklendi.');
+            showToast(refNo + ' referanslı yeni dosya oluşturuldu.', 'success');
         }
 
         function openTransferModal(fileId) {
@@ -1796,7 +1764,7 @@ app.get('/', (req, res) => {
             const select = document.getElementById('transferTargetStaff');
             select.innerHTML = '';
             USERS.filter(u => !u.isSuperAdmin && u.id !== file.assignedTo).forEach(u => {
-                select.innerHTML += `<option value="${u.id}">[ID: ${u.id}] ${u.name} (${u.role})</option>`;
+                select.innerHTML += '<option value="' + u.id + '">[ID: ' + u.id + '] ' + u.name + ' (' + u.role + ')</option>';
             });
 
             document.getElementById('transferModal').classList.remove('hidden');
@@ -1815,7 +1783,7 @@ app.get('/', (req, res) => {
                 saveState();
                 renderAllTables();
                 closeModal('transferModal');
-                logActivity("Dosya Havale", `Ref: ${fileId} nolu dosya${targetStaff ? targetStaff.name : 'personele'} havale edildi.`);
+                logActivity("Dosya Havale", 'Ref: ' + fileId + ' nolu dosya ' + (targetStaff ? targetStaff.name : 'personele') + ' havale edildi.');
                 showToast("Dosya havale edildi.", "info");
             }
         }
@@ -1852,7 +1820,7 @@ app.get('/', (req, res) => {
                     saveState();
                     renderAllTables();
                     closeModal('completeModal');
-                    logActivity("Müdür Talimatı Tamamlama", `Ref: ${fileId} talimatı onaylandı. Not: ${note}`);
+                    logActivity("Müdür Talimatı Tamamlama", 'Ref: ' + fileId + ' talimatı onaylandı. Not: ' + note);
                     showToast("Müdür talimatı tamamlandı.", "success");
                 }
             } else {
@@ -1863,7 +1831,7 @@ app.get('/', (req, res) => {
                     saveState();
                     renderAllTables();
                     closeModal('completeModal');
-                    logActivity("Dosya Tamamlama", `Ref: ${fileId} onaylandı. Not: ${note}`);
+                    logActivity("Dosya Tamamlama", 'Ref: ' + fileId + ' onaylandı. Not: ' + note);
                     showToast("Dosya tamamlandı ve 3 yıllık arşive işlendi.", "success");
                 }
             }
@@ -1876,7 +1844,7 @@ app.get('/', (req, res) => {
                 files = files.filter(f => f.id !== fileId);
                 saveState();
                 renderAllTables();
-                logActivity("Dosya Silme", `Ref: ${fileId} silindi.`);
+                logActivity("Dosya Silme", 'Ref: ' + fileId + ' silindi.');
                 showToast("Dosya silindi.", "warning");
             }
         }
@@ -1887,7 +1855,7 @@ app.get('/', (req, res) => {
                 mudurFiles = mudurFiles.filter(m => m.id !== mudurId);
                 saveState();
                 renderAllTables();
-                logActivity("Müdür Talimatı Silme", `Ref: ${mudurId} silindi.`);
+                logActivity("Müdür Talimatı Silme", 'Ref: ' + mudurId + ' silindi.');
                 showToast("Müdür talimatı silindi.", "warning");
             }
         }
@@ -1902,14 +1870,20 @@ app.get('/', (req, res) => {
         function showToast(msg, type='info') {
             const container = document.getElementById('toastContainer');
             const toast = document.createElement('div');
-            toast.className = `bg-slate-800 text-white p-3 rounded-xl shadow text-xs font-semibold flex justify-between`;
-            toast.innerHTML = `<span>${msg}</span><button onclick="this.parentElement.remove()" class="ml-2">✕</button>`;
+            toast.className = 'bg-slate-800 text-white p-3 rounded-xl shadow text-xs font-semibold flex justify-between';
+            toast.innerHTML = '<span>' + msg + '</span><button onclick="this.parentElement.remove()" class="ml-2">✕</button>';
             container.appendChild(toast);
             setTimeout(() => toast.remove(), 3000);
         }
     </script>
 </body>
-</html>`);
+</html>`;
+
+app.get('/', (req, res) => {
+    res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+    res.setHeader('Pragma', 'no-cache');
+    res.setHeader('Expires', '0');
+    res.send(htmlContent);
 });
 
 app.listen(PORT, () => {
