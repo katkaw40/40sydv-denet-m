@@ -793,12 +793,14 @@ const htmlContent = `<!DOCTYPE html>
     </div>
 
     <script>
-        let USERS = JSON.parse(localStorage.getItem('sydv_users')) || [
+        const defaultUsers = [
             { id: 1, name: "Süper Admin", role: "Süper Admin", isSuperAdmin: true, pass: "123456" },
             { id: 2, name: "Ayşe Kaya", role: "Sosyal Yardım Personeli", isSuperAdmin: false, pass: "123456" },
             { id: 3, name: "Mehmet Demir", role: "İnceleme Görevlisi", isSuperAdmin: false, pass: "123456" },
             { id: 4, name: "Fatma Şahin", role: "Vakıf Görevlisi", isSuperAdmin: false, pass: "123456" }
         ];
+
+        let USERS = JSON.parse(localStorage.getItem('sydv_users')) || defaultUsers;
 
         let PERMISSIONS = JSON.parse(localStorage.getItem('sydv_perms')) || {
             2: { add_inceleme: true, add_sikayet: true, add_hastane: true, add_toplanti: false, can_transfer: true },
@@ -807,7 +809,7 @@ const htmlContent = `<!DOCTYPE html>
         };
 
         const initialFiles = [
-            { id: "2026-101", category: "inceleme", incelemeReason: "Hane ziyareti güncel değil", description: "Hane incelemesi talebi değerlendirmesi.", assignedTo: 2, createdBy: 1, createdAt: "05.06.2026 10:15", deliveredConfirmed: false, status: "İşlemede" },
+            { id: "2026-101", category: "inceleme", incelemeReason: "Hane ziyareti güncel değil", description: "Hane incelemesi talebi değerlendirmesi.", assignedTo: 2, createdBy: 1, createdAt: "05.06.2026 10:15", deliveredConfirmed: false, status: "İşlemde" },
             { id: "2026-103", category: "sikayet", description: "Zeynep Arslan nakit yardım şikayet başvurusu.", assignedTo: 2, createdBy: 2, createdAt: "05.06.2026 14:00", deliveredConfirmed: true, status: "Tamamlandı" }
         ];
 
@@ -826,6 +828,18 @@ const htmlContent = `<!DOCTYPE html>
         let rejectionLogs = JSON.parse(localStorage.getItem('sydv_rejection_logs')) || [];
         let activityLogs = JSON.parse(localStorage.getItem('sydv_activity_logs')) || [];
         let activeTab = 'tab-inceleme';
+
+        function initUserDropdown() {
+            const select = document.getElementById('userSelect');
+            if (!select) return;
+            select.innerHTML = '<option value="">Lütfen Kullanıcı Seçiniz...</option>';
+            USERS.forEach(function(u) {
+                const opt = document.createElement('option');
+                opt.value = u.id;
+                opt.textContent = '[ID: ' + u.id + '] ' + u.name + ' (' + u.role + ')';
+                select.appendChild(opt);
+            });
+        }
 
         window.onload = function() {
             USERS.forEach(u => {
@@ -883,14 +897,6 @@ const htmlContent = `<!DOCTYPE html>
             if (currentUser.isSuperAdmin) {
                 renderActivityLogs();
             }
-        }
-
-        function initUserDropdown() {
-            const select = document.getElementById('userSelect');
-            select.innerHTML = '<option value="">Lütfen Kullanıcı Seçiniz...</option>';
-            USERS.forEach(u => {
-                select.innerHTML += '<option value="' + u.id + '">[ID: ' + u.id + '] ' + u.name + ' (' + u.role + ')</option>';
-            });
         }
 
         function handleLogin(e) {
